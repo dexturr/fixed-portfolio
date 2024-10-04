@@ -3,7 +3,7 @@ pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-// GENERAL TOOD:
+// GENERAL TOOD: ideas that may go somewhere, everywhere or nowhere
 // How to handle slippage
 //      Percentage tolerance?
 //      Absolute tolerance?
@@ -12,11 +12,15 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 //      the total value of the tade is < 0.0001 USD
 //      or the trade is < 0.00001% of the portfolio
 //      or the cost of gas is beyond a specific limit
+// Consider allowing pending deposits to be withdrawn immediately
+// Can we have a base_token that is not Eth (as this is required for gas for trades)
 // Does having the base_token not present in the portfolio create issues? i.e. greater numbr of trades
 // Figure out how to either take a fee to compsenate for trading or similar
 // Create the ability to limit deposits to a specific set of addresses
-// One day give tokens based on the amount deposited to tokenize this contract
-// One day consider poor liquidity
+// Consider adding deposit limits
+// Five tokens based on the amount deposited to tokenize this contract
+// Consider poor liquidity
+// Allow withdrawing a percentage of the value remaining
 
 // May be useful when tring to generalise the constructor?
 // perhaps a type for each token would be useful in general?
@@ -94,7 +98,7 @@ contract FixedAllocation is IGenericErrors {
 
     /**
      * @dev The deposits each address has made to this fund
-     * @notice This is strictly increasing and does not compensate for withdrawals currently
+     * @notice This is strictly increasing and does not compensate for withdrawals (currently()
      */
     mapping(address => uint256) public deposits;
 
@@ -112,6 +116,7 @@ contract FixedAllocation is IGenericErrors {
      */
     event WithdrawalRequest(address indexed from, uint256 pending_amount);
 
+    // TODO: Is an event needed for the desired trade and actual trade for reconciliation?
     // /**
     //  * @dev Emitted when the portfolio decides to make a buy
     //  * @param token The token that the buy is being exectued on
@@ -151,7 +156,12 @@ contract FixedAllocation is IGenericErrors {
         return _base_token;
     }
 
-    // TEST: add test case for same address depositing multilpe times in a single period
+    /**
+     * @dev Deposits into the contact
+     * @param amount amount of the base_token to deposit
+     * @notice This does not perform trades, merely transfers the money and marks the deposit as pending
+     * @notice Before a withdrawal can be performed the money must be traded and then a withdrawal be performed. Suboptimal.
+     */
     function deposit(uint256 amount) public {
         require(
             IERC20(_base_token).transferFrom(msg.sender, address(this), amount)
@@ -163,8 +173,12 @@ contract FixedAllocation is IGenericErrors {
         emit Deposit(msg.sender, amount);
     }
 
-    // TODO: Currently they either withdraw everything or nothing.
-    // would be nice to specify an amount to withdraw in future
+    /**
+     * @dev Request withdrawal for the contract calling this function
+     * @notice All of the money must be removed at once
+     * @notice The money can only be withdrawn during an investment cycle
+     * @notice The money can only be withdrawn after a deposit has been invested
+     */
     function request_withdrawal() public {
         require(
             deposits[msg.sender] >= 0,
@@ -173,6 +187,7 @@ contract FixedAllocation is IGenericErrors {
         // Currently withdrawing everyting rather than a single thing
         uint256 amount = deposits[msg.sender];
         withdrawal_requests[msg.sender] = amount;
+        // TODO: this is not correct as it does not compensate for deposits between withdrawal and investment cycle
         total_pending_withdrawals += amount;
         emit WithdrawalRequest(msg.sender, amount);
     }

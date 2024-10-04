@@ -63,6 +63,14 @@ describe("FixedAllocation", function () {
                 .to.emit(fixedAllocation, "Deposit")
                 .withArgs(owner, amount);
         });
+        it('processes multilpe deposits correctly', () => {
+            // It doesn't because we are storing the withdrawal requests as an amount
+            // which means that only SOME of the request would be marked for withdrawal
+            // not all.
+            //
+            // Needs withdrawal_requests to be address[], rather than mapping(address => uint256)
+            expect(false).to.be.equal(true)
+        });
         it('rejects a deposit request if the user has insufficent funds', async () => {
             const { fixedAllocation, fixedAllocationAddress, otherAccount, wEth } = await loadFixture(deployBasicFixedAllocation);
             await wEth.connect(otherAccount).approve(fixedAllocationAddress, TOTAL_SUPPLY)
@@ -99,7 +107,7 @@ describe("FixedAllocation", function () {
             //
             // Needs withdrawal_requests to be address[], rather than mapping(address => uint256)
             expect(false).to.be.equal(true)
-        })
+        });
         it('throws not implemented error for rebalances', async () => {
             const { fixedAllocation } = await loadFixture(deployBasicFixedAllocation);
             await expect(fixedAllocation.rebalance()).to.be.revertedWithCustomError(fixedAllocation, 'NotImplemented')
