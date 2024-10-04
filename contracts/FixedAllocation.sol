@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 //      or the trade is < 0.00001% of the portfolio
 //      or the cost of gas is beyond a specific limit
 // Consider allowing pending deposits to be withdrawn immediately
-// Can we have a base_token that is not Eth (as this is required for gas for trades)
+// Can we have a base_token that is not Eth (as this is required for gas for trades). Can base_token be removed??
 // Does having the base_token not present in the portfolio create issues? i.e. greater numbr of trades
 // Figure out how to either take a fee to compsenate for trading or similar
 // Create the ability to limit deposits to a specific set of addresses
@@ -166,11 +166,21 @@ contract FixedAllocation is IGenericErrors {
 
     /**
      * @dev The base token that users can deposit to the contract in, or withdraw from the contract
+     * @return base_token_address The address of the base token
      */
     function base_token() external view returns (address) {
         return _base_token;
     }
 
+    /**
+     * @dev The total balance of the portfolio at this time in base_token, based on the valuations
+     * @return total_balance The total balance of the portfolio at this time in base_token
+     */
+    function total_balance() external view returns (uint256) {
+        // TODO: Need valuation contracts in ctor
+        return 100
+    }
+ 
     /**
      * @dev Deposits into the contact
      * @param amount amount of the base_token to deposit
