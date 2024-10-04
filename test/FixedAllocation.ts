@@ -28,7 +28,6 @@ describe("FixedAllocation", function () {
         const fixedAllocationAddress = await fixedAllocation.getAddress();
         return { tokenA, tokenB, owner, otherAccount, fixedAllocation, addressA, addressB, wethAddress, wEth, fixedAllocationAddress };
     }
-
     describe('FixedAllocation', () => {
         it('Should set constructor properties correctly', async () => {
             const { tokenA, tokenB, fixedAllocation, addressA, addressB, wethAddress } = await loadFixture(deployBasicFixedAllocation);
@@ -40,6 +39,7 @@ describe("FixedAllocation", function () {
             expect(await fixedAllocation.proportions(addressB)).to.equal(50n)
             expect(await fixedAllocation.balances(addressB)).to.equal(0n)
             expect(await fixedAllocation.total_depoisted()).to.equal(0n)
+            expect(await fixedAllocation.total_pending_deposits()).to.equal(0)
             expect(await fixedAllocation.base_token()).to.equal(wethAddress)
         });
         it('increments the total deposited amount and the deposits map when a deposit is made', async () => {
@@ -50,7 +50,9 @@ describe("FixedAllocation", function () {
             // can this be used in place of a mocked out wEth token accurately?
             await fixedAllocation.deposit(amount)
             expect(await fixedAllocation.total_depoisted()).to.equal(amount)
+            expect(await fixedAllocation.total_pending_deposits()).to.equal(amount)
             expect(await fixedAllocation.deposits(owner)).to.equal(amount)
+            expect(await fixedAllocation.pending_deposits(owner)).to.equal(amount)
         });
         it('rejects a deposit request if the user has insufficent funds', async () => {
             const { fixedAllocation, fixedAllocationAddress, otherAccount, wEth } = await loadFixture(deployBasicFixedAllocation);
@@ -59,7 +61,9 @@ describe("FixedAllocation", function () {
                 wEth, "ERC20InsufficientBalance"
             );
             expect(await fixedAllocation.total_depoisted()).to.equal(0)
+            expect(await fixedAllocation.total_pending_deposits()).to.equal(0)
             expect(await fixedAllocation.deposits(otherAccount)).to.equal(0)
+            expect(await fixedAllocation.pending_deposits(otherAccount)).to.equal(0)
         });
         it('marks a users request for withdrawal when one is processed', async () => {
             const { fixedAllocation, fixedAllocationAddress, owner, wEth } = await loadFixture(deployBasicFixedAllocation);
@@ -68,6 +72,21 @@ describe("FixedAllocation", function () {
             await fixedAllocation.deposit(amount)
             await fixedAllocation.request_withdrawal()
             expect(await fixedAllocation.withdrawal_requests(owner)).to.equal(true)
-        })
+        });
+        // it('processes new deposits', () => {
+        //     expect(false).to.equal(true)
+        // })
+        // it('processes withdrawals', () => {
+        //     expect(false).to.equal(true)
+        // })
+        // it('sends withdrawals to the correct addresses', () => {
+        //     expect(false).to.equal(true)
+        // })
+        // it('removed processed deposits from map', () => {
+        //     expect(false).to.equal(true)
+        // })
+        // it('sets the ', () => {
+        //     expect(false).to.equal(true)
+        // })
     })
 });

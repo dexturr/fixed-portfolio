@@ -3,11 +3,21 @@ pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+// GENERAL TOOD:
+// How to handle slippage
+// How to decide when it's not worth making a trade, e.g. the total value of the tade is < 0.0001 USD or the trade is < 0.00001% of the portfolio
+
 // May be useful when tring to generalise the constructor?
 // perhaps a type for each token would be useful in general?
 // struct Constituent {
 //     address tokenAddress;
 //     uint proportion;
+//     address valuationAddress;
+//     Not sure, if this is a good idea, for >2 tokens then there comes path finding logic and a single property is not enough...
+//     Could use a dijkstra's where length of vertex = cost of trade
+//     Maybe we just assume there is the most liquidity between base_token and every other token, e.g. in the base_token = eth case this is likely to be true
+//     What's the pragmatic choice here?
+//     address exchangeAddress??
 // }
 
 contract FixedAllocation {
@@ -32,7 +42,11 @@ contract FixedAllocation {
     // The proportions that each index consitutent represents
     mapping(address => uint) public proportions;
 
-    // The deposits each address has made to this account
+    // The pending deposits each address has made to this fund
+    mapping(address => uint256) public pending_deposits;
+    uint256 public total_pending_deposits;
+
+    // The deposits each address has made to this fund
     mapping(address => uint256) public deposits;
 
     // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
@@ -42,6 +56,7 @@ contract FixedAllocation {
         // TODO validate that the addresses provided are all ERC20s
         _base_token = baseToken;
         total_depoisted = 0;
+        total_pending_deposits = 0;
         proportions[token1] = 50;
         proportions[token2] = 50;
         balances[token1] = 0;
@@ -55,11 +70,14 @@ contract FixedAllocation {
         return _base_token;
     }
 
+    // TEST: add test case for same address depositing multilpe times in a single period
     function deposit(uint256 amount) public {
         require(
             IERC20(_base_token).transferFrom(msg.sender, address(this), amount)
         );
         deposits[msg.sender] += amount;
+        pending_deposits[msg.sender] += amount;
+        total_pending_deposits += amount;
         total_depoisted += amount;
     }
 
@@ -74,13 +92,21 @@ contract FixedAllocation {
     }
 
     function rebalance() public {
-        // TODO: refund caller (in some way)
+        // BIG TODO: Do we process the withdrawals with the CURRENT value
+        // or do we process withdrawals with the DESIRED value??
+        // LATER TODO: refund caller (in some way)
         // TODO: process new money in
-        // TODO: process withdrawals
+        // uint256 total_new_money = 0
+        // for (uint256 index = 0; index < pending_deposits.length; index++) {
+        // }
+        // TODO: process withdrawal deltas (based on deposits too micro dark pool)
         // TODO: estimate portfolio value
-        // TODO: decide on exchance values
-        // TODO: exchange
-        // TODO: set total value in value again
+        // TODO: decide on exchange values
+        // TODO: actually do the exchange
+        // TODO: resets total value in portfolio again
+        // TODO: process actual withdrawals
+        // TODO: set withdrawals as processed
+        // TODO: set deposits as processed
         // TODO: validate everything (in all the steps above as well)
     }
 }
