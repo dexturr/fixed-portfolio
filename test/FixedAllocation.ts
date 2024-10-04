@@ -63,13 +63,20 @@ describe("FixedAllocation", function () {
                     .to.emit(fixedAllocation, "Deposit")
                     .withArgs(owner, amount);
             });
-            it('processes multilpe deposits correctly', () => {
-                // It doesn't because we are storing the withdrawal requests as an amount
-                // which means that only SOME of the request would be marked for withdrawal
-                // not all.
-                //
-                // Needs withdrawal_requests to be address[], rather than mapping(address => uint256)
-                expect(false).to.be.equal(true)
+            it('processes multilpe deposits correctly', async () => {
+                const { fixedAllocation, fixedAllocationAddress, owner, wEth } = await loadFixture(deployBasicFixedAllocation);
+                await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+                const amount1 = TOTAL_SUPPLY / 4
+                const amount2 = TOTAL_SUPPLY / 2
+                const total = amount1 + amount2
+                // TODO: should look into change ethers balance at some point. 
+                // can this be used in place of a mocked out wEth token accurately?
+                await fixedAllocation.deposit(amount1)
+                await fixedAllocation.deposit(amount2)
+                expect(await fixedAllocation.total_depoisted()).to.equal(total)
+                expect(await fixedAllocation.total_pending_deposits()).to.equal(total)
+                expect(await fixedAllocation.deposits(owner)).to.equal(total)
+                expect(await fixedAllocation.pending_deposits(owner)).to.equal(total)
             });
             it('rejects a deposit request if the user has insufficent funds', async () => {
                 const { fixedAllocation, fixedAllocationAddress, otherAccount, wEth } = await loadFixture(deployBasicFixedAllocation);
