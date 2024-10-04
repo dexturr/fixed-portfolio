@@ -58,6 +58,7 @@ contract FixedAllocation is IGenericErrors {
      * @dev The base token that users can deposit to the contract in, or withdraw from the contract
      */
     address _base_token;
+
     /**
      * @dev An array of addresses that have requested a withdrawal on the next rebalancing cycle
      */
@@ -89,6 +90,7 @@ contract FixedAllocation is IGenericErrors {
      * @notice This is balnked after each investment cycle
      */
     mapping(address => uint256) public pending_deposits;
+
     /**
      * @dev The total amount of base token awaiting to be bought into the portfolio on next cycle
      */
