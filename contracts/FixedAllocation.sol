@@ -30,6 +30,9 @@ interface IGenericErrors {
     error NotImplemented();
 }
 
+/// @title Fixed Allocation Portfolio
+/// @author Dexter Edwards
+/// @notice Represents a fixed allocation portfolio of ERC20 tokens in a specified proportion
 contract FixedAllocation is IGenericErrors {
     // TODO: RESEARCH why can this not be a simple public property e.g. address public _base_token?
     // why is a manually written getter required for only address types?
@@ -59,6 +62,20 @@ contract FixedAllocation is IGenericErrors {
 
     // The deposits each address has made to this fund
     mapping(address => uint256) public deposits;
+
+    /**
+     * @dev Emitted when base_tokens are depoisted into the portfolio
+     *
+     * Note that `amount_deposited` may be zero.
+     */
+    event Deposit(address indexed from, uint256 amount_deposited);
+
+    /**
+     * @dev Emitted when tokens are depoisted into the portfolio
+     *
+     * Note that `pending_amount` may be zero.
+     */
+    event WithdrawalRequest(address indexed from, uint256 pending_amount);
 
     constructor(address baseToken, address token1, address token2) {
         // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
@@ -91,6 +108,7 @@ contract FixedAllocation is IGenericErrors {
         pending_deposits[msg.sender] += amount;
         total_pending_deposits += amount;
         total_depoisted += amount;
+        emit Deposit(msg.sender, amount);
     }
 
     // TODO: Currently they either withdraw everything or nothing.
@@ -101,8 +119,10 @@ contract FixedAllocation is IGenericErrors {
             "Cannot request withdrawal from an account that never deposited"
         );
         // Currently withdrawing everyting rather than a single thing
-        withdrawal_requests[msg.sender] = deposits[msg.sender];
-        total_pending_withdrawals += deposits[msg.sender];
+        uint256 amount = deposits[msg.sender];
+        withdrawal_requests[msg.sender] = amount;
+        total_pending_withdrawals += amount;
+        emit WithdrawalRequest(msg.sender, amount);
     }
 
     function rebalance() public {

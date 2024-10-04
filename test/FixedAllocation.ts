@@ -55,6 +55,14 @@ describe("FixedAllocation", function () {
             expect(await fixedAllocation.deposits(owner)).to.equal(amount)
             expect(await fixedAllocation.pending_deposits(owner)).to.equal(amount)
         });
+        it('emits an event when a user has deposited', async () => {
+            const { fixedAllocation, fixedAllocationAddress, owner, wEth } = await loadFixture(deployBasicFixedAllocation);
+            await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+            const amount = TOTAL_SUPPLY / 2
+            await expect(fixedAllocation.deposit(amount))
+                .to.emit(fixedAllocation, "Deposit")
+                .withArgs(owner, amount);
+        });
         it('rejects a deposit request if the user has insufficent funds', async () => {
             const { fixedAllocation, fixedAllocationAddress, otherAccount, wEth } = await loadFixture(deployBasicFixedAllocation);
             await wEth.connect(otherAccount).approve(fixedAllocationAddress, TOTAL_SUPPLY)
@@ -75,7 +83,22 @@ describe("FixedAllocation", function () {
             expect(await fixedAllocation.withdrawal_requests(owner)).to.equal(amount)
             expect(await fixedAllocation.total_pending_withdrawals()).to.equal(amount)
         });
-        it('theows not implemented error for rebalances', async () => {
+        it('emits an event when a user has requested a withdrawal', async () => {
+            const { fixedAllocation, fixedAllocationAddress, owner, wEth } = await loadFixture(deployBasicFixedAllocation);
+            await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+            const amount = TOTAL_SUPPLY / 2
+            await fixedAllocation.deposit(amount)
+            await expect(fixedAllocation.request_withdrawal())
+                .to.emit(fixedAllocation, "WithdrawalRequest")
+                .withArgs(owner, amount);
+        });
+        it('process a deposit, withdrawal and then deposit request correctly', () => {
+            // It doesn't because we are storing the withdrawal requests as an amount
+            // which means that only SOME of the request would be marked for withdrawal
+            // not all
+            expect(false).to.be.equal(true)
+        })
+        it('throws not implemented error for rebalances', async () => {
             const { fixedAllocation } = await loadFixture(deployBasicFixedAllocation);
             await expect(fixedAllocation.rebalance()).to.be.revertedWithCustomError(fixedAllocation, 'NotImplemented')
         })
