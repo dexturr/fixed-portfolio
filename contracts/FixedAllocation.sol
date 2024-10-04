@@ -58,11 +58,7 @@ contract FixedAllocation is IGenericErrors {
      * @dev The base token that users can deposit to the contract in, or withdraw from the contract
      */
     address _base_token;
-
-    // Withdrawal requests, these are not processed immedaitely as if the portfolio balance was off
-    // someone could potentially be paid more/less than they are due
-    mapping(address => uint256) public withdrawal_requests;
-    uint256 public total_pending_withdrawals;
+    address[] _withdrawal_requests;
 
     /**
      * @dev The total amount of the base token that has been deposited into this contract
@@ -106,14 +102,14 @@ contract FixedAllocation is IGenericErrors {
      *
      * Note that `amount_deposited` may be zero.
      */
-    event Deposit(address indexed from, uint256 amount_deposited);
+    event Deposit(address indexed account, uint256 amount_deposited);
 
     /**
      * @dev Emitted when tokens are depoisted into the portfolio
      *
      * Note that `pending_amount` may be zero.
      */
-    event WithdrawalRequest(address indexed from, uint256 pending_amount);
+    event WithdrawalRequest(address indexed account);
 
     // TODO: Is an event needed for the desired trade and actual trade for reconciliation?
     // /**
@@ -146,6 +142,18 @@ contract FixedAllocation is IGenericErrors {
         // TODO: will need to be a for loop once this is more generalised
         uint totalProportions = proportions[token1] + proportions[token2];
         require(totalProportions == 100, "More than 100% represented");
+    }
+
+    function withdrawal_requests(address account) external view returns (bool) {
+        bool has_requested = false;
+        for (uint256 index = 0; index < _withdrawal_requests.length; index++) {
+            address request_address = _withdrawal_requests[index];
+            if (account == request_address) {
+                has_requested = true;
+                break;
+            }
+        }
+        return has_requested;
     }
 
     /**
@@ -183,12 +191,8 @@ contract FixedAllocation is IGenericErrors {
             deposits[msg.sender] >= 0,
             "Cannot request withdrawal from an account that never deposited"
         );
-        // Currently withdrawing everyting
-        uint256 amount = deposits[msg.sender];
-        withdrawal_requests[msg.sender] = amount;
-        // TODO: this is not correct as it does not compensate for deposits between withdrawal and investment cycle
-        total_pending_withdrawals += amount;
-        emit WithdrawalRequest(msg.sender, amount);
+        _withdrawal_requests.push(msg.sender);
+        emit WithdrawalRequest(msg.sender);
     }
 
     // TODO: May exceed maxiumum gas with this algo
