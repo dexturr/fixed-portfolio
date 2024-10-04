@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // GENERAL TOOD:
 // How to handle slippage
+//      Percentage tolerance?
+//      Absolute tolerance?
+//      Percentage of portfolio tolerance?
 // How to decide when it's not worth making a trade, e.g.
 //      the total value of the tade is < 0.0001 USD
 //      or the trade is < 0.00001% of the portfolio
@@ -13,6 +16,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // Figure out how to either take a fee to compsenate for trading or similar
 // Create the ability to limit deposits to a specific set of addresses
 // One day give tokens based on the amount deposited to tokenize this contract
+// One day consider poor liquidity
 
 // May be useful when tring to generalise the constructor?
 // perhaps a type for each token would be useful in general?
@@ -108,19 +112,19 @@ contract FixedAllocation is IGenericErrors {
      */
     event WithdrawalRequest(address indexed from, uint256 pending_amount);
 
-    /**
-     * @dev Emitted when the portfolio decides to make a buy
-     * @param token The token that the buy is being exectued on
-     * @param is_buy If the trade is a buy or a sell
-     * @param amount The amount (in the token value) that is being traded
-     * @param base_token_amount The amount in the base token value that is being traded
-     */
-    event Trade(
-        address indexed token,
-        bool indexed is_buy,
-        uint256 amount,
-        uint256 base_token_amount
-    );
+    // /**
+    //  * @dev Emitted when the portfolio decides to make a buy
+    //  * @param token The token that the buy is being exectued on
+    //  * @param is_buy If the trade is a buy or a sell
+    //  * @param amount The amount (in the token value) that is being traded
+    //  * @param base_token_amount The amount in the base token value that is being traded
+    //  */
+    // event Trade(
+    //     address indexed token,
+    //     bool indexed is_buy,
+    //     uint256 amount,
+    //     uint256 base_token_amount
+    // );
 
     constructor(address baseToken, address token1, address token2) {
         // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
@@ -140,6 +144,9 @@ contract FixedAllocation is IGenericErrors {
         require(totalProportions == 100, "More than 100% represented");
     }
 
+    /**
+     * @dev The base token that users can deposit to the contract in, or withdraw from the contract
+     */
     function base_token() external view returns (address) {
         return _base_token;
     }
