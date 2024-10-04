@@ -71,7 +71,7 @@ describe("FixedAllocation", function () {
             const amount = TOTAL_SUPPLY / 2
             await fixedAllocation.deposit(amount)
             await fixedAllocation.request_withdrawal()
-            expect(await fixedAllocation.withdrawal_requests(owner)).to.equal(true)
+            expect(await fixedAllocation.withdrawal_requests(owner)).to.equal(0n)
         });
         // it('processes new deposits', () => {
         //     expect(false).to.equal(true)

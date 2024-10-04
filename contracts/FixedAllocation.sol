@@ -13,10 +13,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 //     address tokenAddress;
 //     uint proportion;
 //     address valuationAddress;
-//     Not sure, if this is a good idea, for >2 tokens then there comes path finding logic and a single property is not enough...
-//     Could use a dijkstra's where length of vertex = cost of trade
-//     Maybe we just assume there is the most liquidity between base_token and every other token, e.g. in the base_token = eth case this is likely to be true
-//     What's the pragmatic choice here?
+//      Not sure, if this is a good idea, for >2 tokens then there comes path finding logic and a single property is not enough...
+//      Could use a dijkstra's where length of vertex = cost of trade
+//      Maybe we just assume there is the most liquidity between base_token and every other token, e.g. in the base_token = eth case this is likely to be true
+//      What's the pragmatic choice here?
 //     address exchangeAddress??
 // }
 
@@ -28,7 +28,8 @@ contract FixedAllocation {
 
     // Withdrawal requests, these are not processed immedaitely as if the portfolio balance was off
     // someone could potentially be paid more/less than they are due
-    mapping(address => bool) public withdrawal_requests;
+    mapping(address => uint256) public withdrawal_requests;
+    uint256 public total_pending_withdrawals;
 
     // The total amount of the base token that has been deposited into this contract
     uint256 public total_depoisted;
@@ -88,17 +89,23 @@ contract FixedAllocation {
             deposits[msg.sender] >= 0,
             "Cannot request withdrawal from an account that never deposited"
         );
-        withdrawal_requests[msg.sender] = true;
+        withdrawal_requests[msg.sender] = balances[msg.sender];
     }
+
+    function calculate_deltas() public {}
 
     function rebalance() public {
         // BIG TODO: Do we process the withdrawals with the CURRENT value
         // or do we process withdrawals with the DESIRED value??
+        // going to do withdrawals from current state I think?
+        // theorectically does not matter right? As each way the total amount of base tokens is the same.
+        //
         // LATER TODO: refund caller (in some way)
         // TODO: process new money in
         // uint256 total_new_money = 0
         // for (uint256 index = 0; index < pending_deposits.length; index++) {
         // }
+        //
         // TODO: process withdrawal deltas (based on deposits too micro dark pool)
         // TODO: estimate portfolio value
         // TODO: decide on exchange values
