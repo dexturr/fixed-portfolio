@@ -17,6 +17,8 @@ contract FixedAllocation {
     mapping(address => uint) public proportions;
     // The deposits each address has made to this account
     mapping(address => uint256) public deposits;
+    // Withdrawal requests
+    address[] public withdrawal_requests;
 
     // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
     // Step 1, abritary percentages
@@ -44,4 +46,8 @@ contract FixedAllocation {
         deposits[msg.sender] += amount;
         total_depoisted += amount;
     }
+
+    // TODO: Currently they either withdraw everything or nothing.
+    // would be nice to specify an amount to withdraw in future
+    function request_withdrawal() public {}
 }

@@ -1,8 +1,6 @@
 import {
-    time,
     loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-// import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import hre from "hardhat";
 
@@ -44,9 +42,21 @@ describe("FixedAllocation", function () {
         it('increments the total deposited amount and the deposits map when a deposit is made', async () => {
             const { fixedAllocation, fixedAllocationAddress, owner, wEth } = await loadFixture(deployBasicFixedAllocation);
             await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
-            await fixedAllocation.deposit(1)
-            expect(await fixedAllocation.total_depoisted()).to.equal(1)
-            expect(await fixedAllocation.deposits(owner)).to.equal(1)
+            const amount = TOTAL_SUPPLY / 2
+            // TODO: should look into change ethers balance at some point. 
+            // can this be used in place of a mocked out wEth token accurately?
+            await fixedAllocation.deposit(amount)
+            expect(await fixedAllocation.total_depoisted()).to.equal(amount)
+            expect(await fixedAllocation.deposits(owner)).to.equal(amount)
+        })
+        it('rejects a deposit request if the user has insufficent funds', async () => {
+            const { fixedAllocation, fixedAllocationAddress, otherAccount, wEth } = await loadFixture(deployBasicFixedAllocation);
+            await wEth.connect(otherAccount).approve(fixedAllocationAddress, TOTAL_SUPPLY)
+            await expect(fixedAllocation.connect(otherAccount).deposit(1)).to.be.revertedWithCustomError(
+                wEth, "ERC20InsufficientBalance"
+            );
+            expect(await fixedAllocation.total_depoisted()).to.equal(0)
+            expect(await fixedAllocation.deposits(otherAccount)).to.equal(0)
         })
     })
 });
