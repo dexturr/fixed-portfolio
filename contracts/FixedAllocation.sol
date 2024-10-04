@@ -5,7 +5,13 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // GENERAL TOOD:
 // How to handle slippage
-// How to decide when it's not worth making a trade, e.g. the total value of the tade is < 0.0001 USD or the trade is < 0.00001% of the portfolio
+// How to decide when it's not worth making a trade, e.g.
+//      the total value of the tade is < 0.0001 USD
+//      or the trade is < 0.00001% of the portfolio
+//      or the cost of gas is beyond a specific limit
+// Does having the base_token not present in the portfolio create issues? i.e. greater numbr of trades
+// Figure out how to either take a fee to compsenate for trading or similar
+// One day give tokens based on the amount deposited to tokenize this contract
 
 // May be useful when tring to generalise the constructor?
 // perhaps a type for each token would be useful in general?
@@ -30,13 +36,18 @@ interface IGenericErrors {
     error NotImplemented();
 }
 
-/// @title Fixed Allocation Portfolio
-/// @author Dexter Edwards
-/// @notice Represents a fixed allocation portfolio of ERC20 tokens in a specified proportion
+/**
+ * @title Fixed Allocation Portfolio
+ * @author Dexter Edwards
+ * @dev Represents a fixed allocation portfolio of ERC20 tokens in a specified proportion
+ */
 contract FixedAllocation is IGenericErrors {
     // TODO: RESEARCH why can this not be a simple public property e.g. address public _base_token?
     // why is a manually written getter required for only address types?
     // The token that is to be used as the base of this fixed allocation portfolio
+    /**
+     * @dev The base token that users can deposit to the contract in, or withdraw from the contract
+     */
     address _base_token;
 
     // Withdrawal requests, these are not processed immedaitely as if the portfolio balance was off
@@ -125,6 +136,7 @@ contract FixedAllocation is IGenericErrors {
         emit WithdrawalRequest(msg.sender, amount);
     }
 
+    // TODO: May exceed maxiumum gas with this algo
     function rebalance() public {
         revert NotImplemented();
         // BIG TODO: Do we process the withdrawals with the CURRENT value
@@ -132,7 +144,6 @@ contract FixedAllocation is IGenericErrors {
         // going to do withdrawals from current state I think?
         // theorectically does not matter right? As each way the total amount of base tokens is the same.
         //
-        // LATER TODO: refund caller (in some way)
         // TODO: process new money in
         // uint256 total_new_money = 0
         // for (uint256 index = 0; index < pending_deposits.length; index++) {
