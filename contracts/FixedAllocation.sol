@@ -184,7 +184,7 @@ contract FixedAllocation is IGenericErrors {
             deposits[msg.sender] >= 0,
             "Cannot request withdrawal from an account that never deposited"
         );
-        // Currently withdrawing everyting rather than a single thing
+        // Currently withdrawing everyting
         uint256 amount = deposits[msg.sender];
         withdrawal_requests[msg.sender] = amount;
         // TODO: this is not correct as it does not compensate for deposits between withdrawal and investment cycle
@@ -193,6 +193,9 @@ contract FixedAllocation is IGenericErrors {
     }
 
     // TODO: May exceed maxiumum gas with this algo
+    /**
+     * @dev Processes withdrawals & deposits and rebalances the portfolio
+     */
     function rebalance() public {
         revert NotImplemented();
         // BIG TODO: Do we process the withdrawals with the CURRENT value
