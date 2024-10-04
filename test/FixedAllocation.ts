@@ -101,7 +101,7 @@ describe("FixedAllocation", function () {
                     .to.emit(fixedAllocation, "WithdrawalRequest")
                     .withArgs(owner);
             });
-            it('process a deposit, withdrawal and then deposit request correctly', () => {
+            it('process a deposit, withdrawal and then deposit request correctly over multilpe vesting cycles', () => {
                 // It doesn't because we are storing the withdrawal requests as an amount
                 // which means that only SOME of the request would be marked for withdrawal
                 // not all.
