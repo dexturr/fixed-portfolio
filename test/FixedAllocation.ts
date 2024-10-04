@@ -34,8 +34,11 @@ describe("FixedAllocation", function () {
             const { tokenA, tokenB, fixedAllocation, addressA, addressB, wethAddress } = await loadFixture(deployBasicFixedAllocation);
             expect(await tokenA.totalSupply()).to.equal(TOTAL_SUPPLY);
             expect(await tokenB.totalSupply()).to.equal(TOTAL_SUPPLY);
+            expect(await fixedAllocation.total_in_portfolio()).to.equal(0)
             expect(await fixedAllocation.proportions(addressA)).to.equal(50n)
+            expect(await fixedAllocation.balances(addressA)).to.equal(0n)
             expect(await fixedAllocation.proportions(addressB)).to.equal(50n)
+            expect(await fixedAllocation.balances(addressB)).to.equal(0n)
             expect(await fixedAllocation.total_depoisted()).to.equal(0n)
             expect(await fixedAllocation.base_token()).to.equal(wethAddress)
         });
