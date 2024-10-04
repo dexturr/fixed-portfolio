@@ -41,6 +41,7 @@ describe("FixedAllocation", function () {
             expect(await fixedAllocation.total_depoisted()).to.equal(0n)
             expect(await fixedAllocation.total_pending_deposits()).to.equal(0)
             expect(await fixedAllocation.base_token()).to.equal(wethAddress)
+            expect(await fixedAllocation.total_pending_withdrawals()).to.equal(0)
         });
         it('increments the total deposited amount and the deposits map when a deposit is made', async () => {
             const { fixedAllocation, fixedAllocationAddress, owner, wEth } = await loadFixture(deployBasicFixedAllocation);
@@ -71,22 +72,8 @@ describe("FixedAllocation", function () {
             const amount = TOTAL_SUPPLY / 2
             await fixedAllocation.deposit(amount)
             await fixedAllocation.request_withdrawal()
-            expect(await fixedAllocation.withdrawal_requests(owner)).to.equal(0n)
+            expect(await fixedAllocation.withdrawal_requests(owner)).to.equal(amount)
+            expect(await fixedAllocation.total_pending_withdrawals()).to.equal(amount)
         });
-        // it('processes new deposits', () => {
-        //     expect(false).to.equal(true)
-        // })
-        // it('processes withdrawals', () => {
-        //     expect(false).to.equal(true)
-        // })
-        // it('sends withdrawals to the correct addresses', () => {
-        //     expect(false).to.equal(true)
-        // })
-        // it('removed processed deposits from map', () => {
-        //     expect(false).to.equal(true)
-        // })
-        // it('sets the ', () => {
-        //     expect(false).to.equal(true)
-        // })
     })
 });

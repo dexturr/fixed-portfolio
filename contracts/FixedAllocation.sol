@@ -89,10 +89,10 @@ contract FixedAllocation {
             deposits[msg.sender] >= 0,
             "Cannot request withdrawal from an account that never deposited"
         );
-        withdrawal_requests[msg.sender] = balances[msg.sender];
+        // Currently withdrawing everyting rather than a single thing
+        withdrawal_requests[msg.sender] = deposits[msg.sender];
+        total_pending_withdrawals += deposits[msg.sender];
     }
-
-    function calculate_deltas() public {}
 
     function rebalance() public {
         // BIG TODO: Do we process the withdrawals with the CURRENT value
@@ -105,6 +105,7 @@ contract FixedAllocation {
         // uint256 total_new_money = 0
         // for (uint256 index = 0; index < pending_deposits.length; index++) {
         // }
+        //
         //
         // TODO: process withdrawal deltas (based on deposits too micro dark pool)
         // TODO: estimate portfolio value
