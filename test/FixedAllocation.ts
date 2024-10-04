@@ -75,5 +75,9 @@ describe("FixedAllocation", function () {
             expect(await fixedAllocation.withdrawal_requests(owner)).to.equal(amount)
             expect(await fixedAllocation.total_pending_withdrawals()).to.equal(amount)
         });
+        it('theows not implemented error for rebalances', async () => {
+            const { fixedAllocation } = await loadFixture(deployBasicFixedAllocation);
+            await expect(fixedAllocation.rebalance()).to.be.revertedWithCustomError(fixedAllocation, 'NotImplemented')
+        })
     })
 });

@@ -20,7 +20,17 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 //     address exchangeAddress??
 // }
 
-contract FixedAllocation {
+/**
+ * @dev Generic errors that can be used in many different contracts
+ */
+interface IGenericErrors {
+    /**
+     * @dev Indicates that a contract method has yet to be implmeneted
+     */
+    error NotImplemented();
+}
+
+contract FixedAllocation is IGenericErrors {
     // TODO: RESEARCH why can this not be a simple public property e.g. address public _base_token?
     // why is a manually written getter required for only address types?
     // The token that is to be used as the base of this fixed allocation portfolio
@@ -50,11 +60,12 @@ contract FixedAllocation {
     // The deposits each address has made to this fund
     mapping(address => uint256) public deposits;
 
-    // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
-    // Step 1, abritary percentages
-    // Step 2, arbitary amount of tokens
     constructor(address baseToken, address token1, address token2) {
-        // TODO validate that the addresses provided are all ERC20s
+        // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
+        // Step 1, abritary percentages
+        // Step 2, arbitary amount of tokens
+
+        // TODO: validate that the addresses provided are all ERC20s
         _base_token = baseToken;
         total_depoisted = 0;
         total_pending_deposits = 0;
@@ -95,6 +106,7 @@ contract FixedAllocation {
     }
 
     function rebalance() public {
+        revert NotImplemented();
         // BIG TODO: Do we process the withdrawals with the CURRENT value
         // or do we process withdrawals with the DESIRED value??
         // going to do withdrawals from current state I think?
