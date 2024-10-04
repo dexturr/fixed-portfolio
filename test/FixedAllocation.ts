@@ -95,7 +95,9 @@ describe("FixedAllocation", function () {
         it('process a deposit, withdrawal and then deposit request correctly', () => {
             // It doesn't because we are storing the withdrawal requests as an amount
             // which means that only SOME of the request would be marked for withdrawal
-            // not all
+            // not all.
+            //
+            // Needs withdrawal_requests to be address[], rather than mapping(address => uint256)
             expect(false).to.be.equal(true)
         })
         it('throws not implemented error for rebalances', async () => {

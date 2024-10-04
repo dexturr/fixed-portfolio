@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 //      or the cost of gas is beyond a specific limit
 // Does having the base_token not present in the portfolio create issues? i.e. greater numbr of trades
 // Figure out how to either take a fee to compsenate for trading or similar
+// Create the ability to limit deposits to a specific set of addresses
 // One day give tokens based on the amount deposited to tokenize this contract
 
 // May be useful when tring to generalise the constructor?
@@ -55,23 +56,42 @@ contract FixedAllocation is IGenericErrors {
     mapping(address => uint256) public withdrawal_requests;
     uint256 public total_pending_withdrawals;
 
-    // The total amount of the base token that has been deposited into this contract
+    /**
+     * @dev The total amount of the base token that has been deposited into this contract
+     * @notice Due to trade fees this may not be the total VALUE of the portfolio at any given time
+     */
     uint256 public total_depoisted;
 
-    // The total amount of the base token that was traded into assets on last rebalance
+    /**
+     * @dev The total amount of the base token that was traded into assets on last rebalance
+     * @notice This is not equal to total deposited because of trade fees and pending deposits
+     */
     uint256 public total_in_portfolio;
 
-    // Balances of the portfolio in each asset
+    /**
+     * @dev Balances of the portfolio in each asset
+     */
     mapping(address => uint256) public balances;
 
-    // The proportions that each index consitutent represents
+    /**
+     * @dev The proportions that each index consitutent represents
+     */
     mapping(address => uint) public proportions;
 
-    // The pending deposits each address has made to this fund
+    /**
+     * @dev The pending deposits each address has made to this fund
+     * @notice This is balnked after each investment cycle
+     */
     mapping(address => uint256) public pending_deposits;
+    /**
+     * @dev The total amount of base token awaiting to be bought into the portfolio on next cycle
+     */
     uint256 public total_pending_deposits;
 
-    // The deposits each address has made to this fund
+    /**
+     * @dev The deposits each address has made to this fund
+     * @notice This is strictly increasing and does not compensate for withdrawals currently
+     */
     mapping(address => uint256) public deposits;
 
     /**
@@ -87,6 +107,20 @@ contract FixedAllocation is IGenericErrors {
      * Note that `pending_amount` may be zero.
      */
     event WithdrawalRequest(address indexed from, uint256 pending_amount);
+
+    /**
+     * @dev Emitted when the portfolio decides to make a buy
+     * @param token The token that the buy is being exectued on
+     * @param is_buy If the trade is a buy or a sell
+     * @param amount The amount (in the token value) that is being traded
+     * @param base_token_amount The amount in the base token value that is being traded
+     */
+    event Trade(
+        address indexed token,
+        bool indexed is_buy,
+        uint256 amount,
+        uint256 base_token_amount
+    );
 
     constructor(address baseToken, address token1, address token2) {
         // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
