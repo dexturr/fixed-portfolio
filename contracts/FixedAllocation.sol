@@ -58,6 +58,9 @@ contract FixedAllocation is IGenericErrors {
      * @dev The base token that users can deposit to the contract in, or withdraw from the contract
      */
     address _base_token;
+    /**
+     * @dev An array of addresses that have requested a withdrawal on the next rebalancing cycle
+     */
     address[] _withdrawal_requests;
 
     /**
@@ -144,6 +147,11 @@ contract FixedAllocation is IGenericErrors {
         require(totalProportions == 100, "More than 100% represented");
     }
 
+    /**
+     * @dev Check if an address has requested a withdrawal on the next investment cycle
+     * @param account The account to check
+     * @return bool If this account has requested a withdrawal
+     */
     function withdrawal_requests(address account) external view returns (bool) {
         bool has_requested = false;
         for (uint256 index = 0; index < _withdrawal_requests.length; index++) {
