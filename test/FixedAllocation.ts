@@ -66,7 +66,7 @@ describe("FixedAllocation", function () {
             expect(await fixedAllocation.deposits(otherAccount)).to.equal(0)
             expect(await fixedAllocation.pending_deposits(otherAccount)).to.equal(0)
         });
-        it('marks a users request for withdrawal when one is processed', async () => {
+        it('marks a users request for withdrawal when one is processed, increments total ', async () => {
             const { fixedAllocation, fixedAllocationAddress, owner, wEth } = await loadFixture(deployBasicFixedAllocation);
             await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
             const amount = TOTAL_SUPPLY / 2
