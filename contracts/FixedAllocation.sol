@@ -66,13 +66,12 @@ contract FixedAllocation is IGenericErrors {
 
     /**
      * @dev The total amount of the base token that has been deposited into this contract
-     * @notice Due to trade fees this may not be the total VALUE of the portfolio at any given time
      */
     uint256 public total_depoisted;
 
     /**
      * @dev The total amount of the base token that was traded into assets on last rebalance
-     * @notice This is not equal to total deposited because of trade fees and pending deposits
+     * @notice This is not equal to total deposited because of pending deposits
      */
     uint256 public total_in_portfolio;
 
