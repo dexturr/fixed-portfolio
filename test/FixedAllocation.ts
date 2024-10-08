@@ -210,6 +210,27 @@ describe("FixedAllocation", function () {
                 expect(await tokenB.balanceOf(exchnageAddress)).to.equal(60)
                 expect(await wEth.balanceOf(exchnageAddress)).to.equal(20)
             })
+            it('emits trade events with correct data', async () => {
+                const { fixedAllocation, owner, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, addressA, addressB } = await loadFixture(deployBasicFixedAllocation);
+                await tokenA.approve(owner.address, TOTAL_SUPPLY)
+                await tokenB.approve(owner.address, TOTAL_SUPPLY)
+
+                // Approve the fix allocation portfolio for our eth deposit
+                await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+
+                // Seed all the tokens into our mock exchange
+                await tokenA.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+                await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+
+                // TODO: should look into change ethers balance at some point. 
+                // can this be used in place of a mocked out wEth token accurately?
+                await fixedAllocation.deposit(20)
+                const initialInvestmentPromise = fixedAllocation.initial_investment();
+                expect(initialInvestmentPromise).to.emit(fixedAllocation, "Trade")
+                    .withArgs(addressA, true, 10, 20);
+                expect(initialInvestmentPromise).to.emit(fixedAllocation, "Trade")
+                    .withArgs(addressB, true, 10, 40);
+            })
         })
         describe('TotalBalance', () => {
             // it('allows querying of different token balances', async () => {

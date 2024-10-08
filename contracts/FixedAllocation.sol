@@ -134,19 +134,19 @@ contract FixedAllocation is IGenericErrors {
     event WithdrawalRequest(address indexed account);
 
     // TODO: Is an event needed for the desired trade and actual trade for reconciliation?
-    // /**
-    //  * @dev Emitted when the portfolio decides to make a buy
-    //  * @param token The token that the buy is being exectued on
-    //  * @param is_buy If the trade is a buy or a sell
-    //  * @param amount The amount (in the token value) that is being traded
-    //  * @param base_token_amount The amount in the base token value that is being traded
-    //  */
-    // event Trade(
-    //     address indexed token,
-    //     bool indexed is_buy,
-    //     uint256 amount,
-    //     uint256 base_token_amount
-    // );
+    /**
+     * @dev Emitted when the portfolio decides to make a buy
+     * @param token The token that the buy is being exectued on
+     * @param is_buy If the trade is a buy or a sell
+     * @param amount The amount (in the token value) that is being traded
+     * @param base_token_amount The amount in the base token value that is being traded
+     */
+    event Trade(
+        address indexed token,
+        bool indexed is_buy,
+        uint256 amount,
+        uint256 base_token_amount
+    );
 
     constructor(
         address baseToken,
@@ -258,17 +258,18 @@ contract FixedAllocation is IGenericErrors {
 
     function exchange_tokens(
         address token_sent,
-        uint256 amount,
+        uint256 base_token_amount,
         address token_received
     ) public {
         // TODO: Does this need to be reset each time? Uniswap does it so probably. Understand why.
         // Set the approval limit
         require(IERC20(_base_token).approve(address(_exchange_address), 1000));
-        IExchangable(_exchange_address).swap(
+        uint256 recieved = IExchangable(_exchange_address).swap(
             token_sent,
-            amount,
+            base_token_amount,
             token_received
         );
+        emit Trade(token_received, true, base_token_amount, recieved);
         // Reset the approval limit back to 0
         require(IERC20(_base_token).approve(address(_exchange_address), 0));
     }
