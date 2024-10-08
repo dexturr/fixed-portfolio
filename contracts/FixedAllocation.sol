@@ -24,6 +24,7 @@ import "contracts/Quote/Quote.sol";
 // Allow withdrawing a percentage of the value remaining
 // Look into decimals, overflow errors
 // Add an emergency exit e.g. return all money to all parties, in case a portfolio could never trade e.g. a tokens value became effectively 0
+// Restrict rebalancing to a single address?
 
 // Long term goals:
 // Give tokens based on the amount deposited to tokenize this contract to tokenize this index and make it tradable
@@ -165,8 +166,6 @@ contract FixedAllocation is IGenericErrors {
 
         proportions[address(token1)] = 50;
         proportions[address(token2)] = 50;
-        balances[address(token1)] = 0;
-        balances[address(token2)] = 0;
 
         // TODO: will need to be a for loop once this is more generalised
         uint totalProportions = proportions[address(token1)] +
@@ -216,7 +215,7 @@ contract FixedAllocation is IGenericErrors {
             _base_token,
             token
         );
-        return balances[token] * base_value_token;
+        return IERC20(token).balanceOf(address(this)) * base_value_token;
     }
 
     /**
