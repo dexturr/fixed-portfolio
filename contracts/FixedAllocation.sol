@@ -289,6 +289,7 @@ contract FixedAllocation is IGenericErrors {
         uint256 total_token2_trade = (total_pending_deposits *
             proportions[address(_token2)]) / 100;
         exchange_tokens(_base_token, total_token2_trade, address(_token2));
+        // TODO: Mark pending deposits as completed
     }
 
     // TODO: May exceed maxiumum gas with this algo, consider sending the withdrawals to
