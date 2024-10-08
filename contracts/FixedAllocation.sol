@@ -205,10 +205,14 @@ contract FixedAllocation is IGenericErrors {
      * @return total_balance The total balance of the portfolio at this time in base_token
      */
     function total_portfolio_base_balance() external view returns (uint256) {
-        return get_value_of_token(_token1) + get_value_of_token(_token2);
+        return
+            portfolio_base_token_value(_token1) +
+            portfolio_base_token_value(_token2);
     }
 
-    function get_value_of_token(address token) public view returns (uint256) {
+    function portfolio_base_token_value(
+        address token
+    ) public view returns (uint256) {
         uint256 base_value_token = IQuotable(_quote_address).quote(
             _base_token,
             token
@@ -248,6 +252,28 @@ contract FixedAllocation is IGenericErrors {
         emit WithdrawalRequest(msg.sender);
     }
 
+    function exchange_tokens(
+        address token_sent,
+        uint256 amount,
+        address token_received
+    ) public {
+        IExchangable(_exchange_address).swap(
+            token_sent,
+            amount,
+            token_received
+        );
+    }
+
+    // Performs the initial investment of deposits, without the need of worrying about withdrawals and other exchanges.
+    function initial_investment() public {
+        uint256 total_token1_trade = (total_pending_deposits *
+            proportions[_token1]) / 100;
+        exchange_tokens(_base_token, total_token1_trade, _token1);
+        uint256 total_token2_trade = (total_pending_deposits *
+            proportions[_token2]) / 100;
+        exchange_tokens(_base_token, total_token2_trade, _token2);
+    }
+
     // TODO: May exceed maxiumum gas with this algo, consider sending the withdrawals to
     // a pending for withdrawal bucket and forcing the user to withdraw again.
     /**
@@ -255,6 +281,7 @@ contract FixedAllocation is IGenericErrors {
      */
     function rebalance() public {
         revert NotImplemented();
+
         // BIG TODO: Do we process the withdrawals with the CURRENT value
         // or do we process withdrawals with the DESIRED value??
         // going to do withdrawals from current state I think?

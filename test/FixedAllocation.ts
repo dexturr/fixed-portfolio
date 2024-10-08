@@ -34,7 +34,7 @@ describe("FixedAllocation", function () {
         const Exchange = await hre.ethers.getContractFactory("MockExchange");
         const exchange = await Exchange.deploy()
         const quote = await Quote.deploy()
-        const [quoteAddress, exchnageAddress] = await Promise.all([
+        const [quoteAddress, exchangeAddress] = await Promise.all([
             quote.getAddress(),
             exchange.getAddress(),
         ])
@@ -51,9 +51,24 @@ describe("FixedAllocation", function () {
 
         // Construct the ficed allocation contract
         const FixedAllocation = await hre.ethers.getContractFactory("FixedAllocation");
-        const fixedAllocation = await FixedAllocation.deploy(wethAddress, addressA, addressB, exchnageAddress, quoteAddress)
+        const fixedAllocation = await FixedAllocation.deploy(wethAddress, addressA, addressB, exchangeAddress, quoteAddress)
         const fixedAllocationAddress = await fixedAllocation.getAddress();
-        return { tokenA, tokenB, owner, otherAccount, fixedAllocation, addressA, addressB, wethAddress, wEth, fixedAllocationAddress };
+        return {
+            tokenA,
+            tokenB,
+            owner,
+            otherAccount,
+            fixedAllocation,
+            addressA,
+            addressB,
+            wethAddress,
+            wEth,
+            fixedAllocationAddress,
+            quoteAddress,
+            exchnageAddress: exchangeAddress,
+            exchange,
+            quote
+        };
     }
 
     describe('FixedAllocation', () => {
@@ -146,6 +161,22 @@ describe("FixedAllocation", function () {
             //     expect(false).to.be.equal(true)
             // });
         })
+        describe('InitialInvestment', () => {
+            it('buys tokens in the correct proportions', async () => {
+                const { fixedAllocation, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, addressA, addressB } = await loadFixture(deployBasicFixedAllocation);
+                await tokenA.approve(exchnageAddress, TOTAL_SUPPLY)
+                await tokenA.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+                await tokenB.approve(exchnageAddress, TOTAL_SUPPLY)
+                await tokenB.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+                await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+                const amount = TOTAL_SUPPLY / 2
+                // TODO: should look into change ethers balance at some point. 
+                // can this be used in place of a mocked out wEth token accurately?
+                await fixedAllocation.deposit(amount)
+                await fixedAllocation.initial_investment()
+                expect(await fixedAllocation.total_portfolio_base_balance()).to.equal(0)
+            })
+        })
         describe('TotalBalance', () => {
             // it('allows querying of different token balances', async () => {
             //     const { fixedAllocation, fixedAllocationAddress, owner, wEth, addressA } = await loadFixture(deployBasicFixedAllocation);
@@ -158,6 +189,18 @@ describe("FixedAllocation", function () {
                 const { fixedAllocation } = await loadFixture(deployBasicFixedAllocation);
                 expect(await fixedAllocation.total_portfolio_base_balance()).to.equal(0)
             })
+            // it('gives correct balance after an initial investment cycle', async () => {
+            //     const { fixedAllocation, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress } = await loadFixture(deployBasicFixedAllocation);
+            //     await tokenA.approve(exchnageAddress, TOTAL_SUPPLY)
+            //     await tokenB.approve(exchnageAddress, TOTAL_SUPPLY)
+            //     await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+            //     const amount = TOTAL_SUPPLY / 2
+            //     // TODO: should look into change ethers balance at some point. 
+            //     // can this be used in place of a mocked out wEth token accurately?
+            //     await fixedAllocation.deposit(amount)
+            //     await fixedAllocation.initial_investment()
+            //     expect(await fixedAllocation.total_portfolio_base_balance()).to.equal(0)
+            // })
         })
         it('throws not implemented error for rebalances', async () => {
             const { fixedAllocation } = await loadFixture(deployBasicFixedAllocation);
