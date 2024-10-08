@@ -6,6 +6,7 @@ import "contracts/Exchange/Exchange.sol";
 import "contracts/Quote/Quote.sol";
 
 // GENERAL TOOD: ideas that may go somewhere, everywhere or nowhere
+// Generalise to N tokens (exchnage paths may be difficult here)
 // How to handle slippage
 //      Percentage tolerance?
 //      Absolute tolerance?
@@ -15,8 +16,10 @@ import "contracts/Quote/Quote.sol";
 //      or the trade is < 0.00001% of the portfolio
 //      or the cost of gas is beyond a specific limit
 // Consider allowing pending deposits to be withdrawn immediately
-// Can we have a base_token that is not Eth (as this is required for gas for trades). Can base_token be removed??
+// Can we have a base_token that is not Eth (as this is required for gas for trades).
+//      Can base_token be removed and replaced with Eth always?
 // Does having the base_token not present in the portfolio create issues? i.e. greater numbr of trades
+//      Second thoughts, this is what has been programmed lol at you past me.
 // Figure out how to either take a fee to compsenate for trading or refund the caller of rebalance or similar
 // Create the ability to limit deposits to a specific set of addresses
 // Consider adding deposit limits too
@@ -110,7 +113,7 @@ contract FixedAllocation is IGenericErrors {
 
     /**
      * @dev The deposits each address has made to this fund
-     * @notice This is strictly increasing and does not compensate for withdrawals (currently()
+     * @notice This is strictly increasing and does not compensate for withdrawals (currently)
      */
     mapping(address => uint256) public deposits;
 
@@ -250,25 +253,35 @@ contract FixedAllocation is IGenericErrors {
         emit WithdrawalRequest(msg.sender);
     }
 
+    /**
+     * @dev Exchnage a given token for another
+     * @param token_sent The token that is being exchanged
+     * @param token_amount The amount of the token being exchanged
+     * @param token_received The token we are exchanging the token_sent for
+     */
     function exchange_tokens(
         address token_sent,
-        uint256 base_token_amount,
+        uint256 token_amount,
         address token_received
     ) public {
         // TODO: Does this need to be reset each time? Uniswap does it so probably. Understand why.
         // Set the approval limit
-        require(IERC20(_base_token).approve(address(_exchange_address), 1000));
+        require(
+            IERC20(token_sent).approve(address(_exchange_address), token_amount)
+        );
         uint256 recieved = IExchangable(_exchange_address).swap(
             token_sent,
-            base_token_amount,
+            token_amount,
             token_received
         );
-        emit Trade(token_received, true, base_token_amount, recieved);
+        emit Trade(token_received, true, token_amount, recieved);
         // Reset the approval limit back to 0
-        require(IERC20(_base_token).approve(address(_exchange_address), 0));
+        require(IERC20(token_sent).approve(address(_exchange_address), 0));
     }
 
-    // Performs the initial investment of deposits, without the need of worrying about withdrawals and other exchanges.
+    /**
+     * @dev Performs the initial investment of deposits, without the need of worrying about withdrawals and other exchanges.
+     */
     function initial_investment() public {
         uint256 total_token1_trade = (total_pending_deposits *
             proportions[address(_token1)]) / 100;
