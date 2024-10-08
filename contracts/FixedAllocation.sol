@@ -3,6 +3,7 @@ pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "contracts/Exchange/Exchange.sol";
+import "contracts/Quote/Quote.sol";
 
 // GENERAL TOOD: ideas that may go somewhere, everywhere or nowhere
 // How to handle slippage
@@ -73,9 +74,11 @@ contract FixedAllocation is IGenericErrors {
      * @dev The base token that users can deposit to the contract in, or withdraw from the contract
      */
     address immutable _base_token;
+    address immutable _token1;
+    address immutable _token2;
 
-    address immutable _exchange_address;
-    address immutable _quote_address;
+    IExchangable immutable _exchange_address;
+    IQuotable immutable _quote_address;
 
     /**
      * @dev An array of addresses that have requested a withdrawal on the next rebalancing cycle
@@ -148,8 +151,8 @@ contract FixedAllocation is IGenericErrors {
         address baseToken,
         address token1,
         address token2,
-        address exchange_address,
-        address quote_address
+        IExchangable exchange_address,
+        IQuotable quote_address
     ) {
         // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
         // Step 1, abritary percentages
@@ -165,6 +168,8 @@ contract FixedAllocation is IGenericErrors {
         proportions[token2] = 50;
         balances[token1] = 0;
         balances[token2] = 0;
+        _token1 = token1;
+        _token2 = token2;
         // TODO: will need to be a for loop once this is more generalised
         uint totalProportions = proportions[token1] + proportions[token2];
         require(totalProportions == 100, "More than 100% represented");
@@ -199,9 +204,16 @@ contract FixedAllocation is IGenericErrors {
      * @dev The total balance of the portfolio at this time in base_token, based on the valuations
      * @return total_balance The total balance of the portfolio at this time in base_token
      */
-    function total_balance() external view returns (uint256) {
-        // TODO: Need valuation contracts in ctor
-        return 100;
+    function total_base_balance() external view returns (uint256) {
+        return get_value_of_token(_token1) + get_value_of_token(_token2);
+    }
+
+    function get_value_of_token(address token) public view returns (uint256) {
+        uint256 base_value_token = IQuotable(_quote_address).quote(
+            _base_token,
+            token
+        );
+        return balances[token] * base_value_token;
     }
 
     /**

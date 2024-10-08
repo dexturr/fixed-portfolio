@@ -23,6 +23,7 @@ contract MockExchange is IExchangable {
         rates[base_token_address][exchange_token_address] = rate;
     }
 
+    // TODO: Investigate truncation errors and how they may affect this. Does the dust not mattter? e.g. max error is 9x10**-(TOKEN_DECIMALS)
     function swap(
         address token_sent,
         uint256 amount,
