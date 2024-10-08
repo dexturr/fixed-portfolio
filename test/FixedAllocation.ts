@@ -78,9 +78,7 @@ describe("FixedAllocation", function () {
             expect(await tokenB.totalSupply()).to.equal(TOTAL_SUPPLY);
             expect(await fixedAllocation.total_in_portfolio()).to.equal(0)
             expect(await fixedAllocation.proportions(addressA)).to.equal(50n)
-            expect(await fixedAllocation.balances(addressA)).to.equal(0n)
             expect(await fixedAllocation.proportions(addressB)).to.equal(50n)
-            expect(await fixedAllocation.balances(addressB)).to.equal(0n)
             expect(await fixedAllocation.total_depoisted()).to.equal(0n)
             expect(await fixedAllocation.total_pending_deposits()).to.equal(0)
             expect(await fixedAllocation.base_token()).to.equal(wethAddress)
@@ -233,13 +231,6 @@ describe("FixedAllocation", function () {
             })
         })
         describe('TotalBalance', () => {
-            // it('allows querying of different token balances', async () => {
-            //     const { fixedAllocation, fixedAllocationAddress, owner, wEth, addressA } = await loadFixture(deployBasicFixedAllocation);
-            //     await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
-            //     const amount = TOTAL_SUPPLY / 2
-            //     await fixedAllocation.deposit(amount)
-            //     expect(await fixedAllocation.balances(addressA)).to.equal(amount.toString())
-            // })
             it('gives value of 0 when no tokens are currently in the portfolio', async () => {
                 const { fixedAllocation } = await loadFixture(deployBasicFixedAllocation);
                 expect(await fixedAllocation.total_portfolio_base_balance()).to.equal(0)

@@ -96,12 +96,6 @@ contract FixedAllocation is IGenericErrors {
      */
     uint256 public total_in_portfolio;
 
-    // TODO: do we even need to store the balances of these tokens in the contract? Are they not just the result of IERC20.balanceOf(fixedPortfolioAddress)
-    /**
-     * @dev Balances of the portfolio in each asset
-     */
-    mapping(address => uint256) public balances;
-
     /**
      * @dev The pending deposits each address has made to this fund
      * @notice This is balnked after each investment cycle
