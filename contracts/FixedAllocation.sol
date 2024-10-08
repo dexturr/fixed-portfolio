@@ -158,18 +158,21 @@ contract FixedAllocation is IGenericErrors {
         // Step 1, abritary percentages
         // Step 2, arbitary amount of tokens
 
-        // TODO: validate that the addresses provided are all ERC20s
+        // TODO: validate that the addresses provided are all ERC20s?
         _base_token = baseToken;
+        _token1 = token1;
+        _token2 = token2;
+
         _exchange_address = exchange_address;
         _quote_address = quote_address;
         total_depoisted = 0;
         total_pending_deposits = 0;
+
         proportions[token1] = 50;
         proportions[token2] = 50;
         balances[token1] = 0;
         balances[token2] = 0;
-        _token1 = token1;
-        _token2 = token2;
+
         // TODO: will need to be a for loop once this is more generalised
         uint totalProportions = proportions[token1] + proportions[token2];
         require(totalProportions == 100, "More than 100% represented");
