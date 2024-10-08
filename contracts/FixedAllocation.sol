@@ -204,7 +204,7 @@ contract FixedAllocation is IGenericErrors {
      * @dev The total balance of the portfolio at this time in base_token, based on the valuations
      * @return total_balance The total balance of the portfolio at this time in base_token
      */
-    function total_base_balance() external view returns (uint256) {
+    function total_portfolio_base_balance() external view returns (uint256) {
         return get_value_of_token(_token1) + get_value_of_token(_token2);
     }
 

@@ -156,7 +156,7 @@ describe("FixedAllocation", function () {
             // })
             it('gives value of 0 when no tokens are currently in the portfolio', async () => {
                 const { fixedAllocation } = await loadFixture(deployBasicFixedAllocation);
-                expect(await fixedAllocation.total_base_balance()).to.equal(0)
+                expect(await fixedAllocation.total_portfolio_base_balance()).to.equal(0)
             })
         })
         it('throws not implemented error for rebalances', async () => {
