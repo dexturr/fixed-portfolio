@@ -44,7 +44,7 @@ describe("FixedAllocation", function () {
         quote.add_rate(wethAddress, addressB, 4)
         quote.add_rate(addressA, addressB, 2)
 
-        // Setup 1 weth = 2A = 4B
+        // Setup 1weth = 2A = 4B
         exchange.add_rate(wethAddress, addressA, 2)
         exchange.add_rate(wethAddress, addressB, 4)
         exchange.add_rate(addressA, addressB, 2)
@@ -163,18 +163,52 @@ describe("FixedAllocation", function () {
         })
         describe('InitialInvestment', () => {
             it('buys tokens in the correct proportions', async () => {
-                const { fixedAllocation, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, addressA, addressB } = await loadFixture(deployBasicFixedAllocation);
-                await tokenA.approve(exchnageAddress, TOTAL_SUPPLY)
-                await tokenA.approve(fixedAllocationAddress, TOTAL_SUPPLY)
-                await tokenB.approve(exchnageAddress, TOTAL_SUPPLY)
-                await tokenB.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+                const { fixedAllocation, owner, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, } = await loadFixture(deployBasicFixedAllocation);
+                await tokenA.approve(owner.address, TOTAL_SUPPLY)
+                await tokenB.approve(owner.address, TOTAL_SUPPLY)
+
+                // Approve the fix allocation portfolio for our eth deposit
                 await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
-                const amount = TOTAL_SUPPLY / 2
+
+                // Seed all the tokens into our mock exchange
+                await tokenA.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+                await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+
                 // TODO: should look into change ethers balance at some point. 
                 // can this be used in place of a mocked out wEth token accurately?
-                await fixedAllocation.deposit(amount)
+                await fixedAllocation.deposit(10)
                 await fixedAllocation.initial_investment()
-                expect(await fixedAllocation.total_portfolio_base_balance()).to.equal(0)
+
+                expect(await tokenA.balanceOf(fixedAllocation)).to.equal(10) // 2 * (10 * 0.5)
+                expect(await tokenB.balanceOf(fixedAllocation)).to.equal(20) // 4 * (10 * 0.5)
+                expect(await wEth.balanceOf(fixedAllocation)).to.equal(0)
+                expect(await tokenA.balanceOf(exchnageAddress)).to.equal(90)
+                expect(await tokenB.balanceOf(exchnageAddress)).to.equal(80)
+                expect(await wEth.balanceOf(exchnageAddress)).to.equal(10)
+            })
+            it('buys tokens in the correct proportions (2)', async () => {
+                const { fixedAllocation, owner, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, } = await loadFixture(deployBasicFixedAllocation);
+                await tokenA.approve(owner.address, TOTAL_SUPPLY)
+                await tokenB.approve(owner.address, TOTAL_SUPPLY)
+
+                // Approve the fix allocation portfolio for our eth deposit
+                await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+
+                // Seed all the tokens into our mock exchange
+                await tokenA.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+                await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+
+                // TODO: should look into change ethers balance at some point. 
+                // can this be used in place of a mocked out wEth token accurately?
+                await fixedAllocation.deposit(20)
+                await fixedAllocation.initial_investment()
+
+                expect(await tokenA.balanceOf(fixedAllocation)).to.equal(20) // 2 * (10 * 0.5)
+                expect(await tokenB.balanceOf(fixedAllocation)).to.equal(40) // 4 * (10 * 0.5)
+                expect(await wEth.balanceOf(fixedAllocation)).to.equal(0)
+                expect(await tokenA.balanceOf(exchnageAddress)).to.equal(80)
+                expect(await tokenB.balanceOf(exchnageAddress)).to.equal(60)
+                expect(await wEth.balanceOf(exchnageAddress)).to.equal(20)
             })
         })
         describe('TotalBalance', () => {

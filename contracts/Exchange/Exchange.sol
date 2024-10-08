@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// import "hardhat/console.sol";
 
 interface IExchangable {
     function swap(
@@ -33,13 +34,7 @@ contract MockExchange is IExchangable {
         require(
             IERC20(token_sent).transferFrom(msg.sender, address(this), amount)
         );
-        require(
-            IERC20(token_received).transferFrom(
-                address(this),
-                msg.sender,
-                exchanged_amount
-            )
-        );
+        require(IERC20(token_received).transfer(msg.sender, exchanged_amount));
         return exchanged_amount;
     }
 }

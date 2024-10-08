@@ -96,6 +96,7 @@ contract FixedAllocation is IGenericErrors {
      */
     uint256 public total_in_portfolio;
 
+    // TODO: do we even need to store the balances of these tokens in the contract? Are they not just the result of IERC20.balanceOf(fixedPortfolioAddress)
     /**
      * @dev Balances of the portfolio in each asset
      */
@@ -153,7 +154,7 @@ contract FixedAllocation is IGenericErrors {
         address token2,
         IExchangable exchange_address,
         IQuotable quote_address
-    ) {
+    ) public {
         // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
         // Step 1, abritary percentages
         // Step 2, arbitary amount of tokens
@@ -260,11 +261,16 @@ contract FixedAllocation is IGenericErrors {
         uint256 amount,
         address token_received
     ) public {
+        // TODO: Does this need to be reset each time? Uniswap does it so probably. Understand why.
+        // Set the approval limit
+        require(IERC20(_base_token).approve(address(_exchange_address), 1000));
         IExchangable(_exchange_address).swap(
             token_sent,
             amount,
             token_received
         );
+        // Reset the approval limit back to 0
+        require(IERC20(_base_token).approve(address(_exchange_address), 0));
     }
 
     // Performs the initial investment of deposits, without the need of worrying about withdrawals and other exchanges.
