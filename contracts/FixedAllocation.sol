@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "contracts/Exchange/Exchange.sol";
 
 // GENERAL TOOD: ideas that may go somewhere, everywhere or nowhere
 // How to handle slippage
@@ -15,13 +16,17 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // Consider allowing pending deposits to be withdrawn immediately
 // Can we have a base_token that is not Eth (as this is required for gas for trades). Can base_token be removed??
 // Does having the base_token not present in the portfolio create issues? i.e. greater numbr of trades
-// Figure out how to either take a fee to compsenate for trading or similar
+// Figure out how to either take a fee to compsenate for trading or refund the caller of rebalance or similar
 // Create the ability to limit deposits to a specific set of addresses
-// Consider adding deposit limits
-// Give tokens based on the amount deposited to tokenize this contract
+// Consider adding deposit limits too
 // Consider poor liquidity
 // Allow withdrawing a percentage of the value remaining
 // Look into decimals, overflow errors
+// Add an emergency exit e.g. return all money to all parties, in case a portfolio could never trade e.g. a tokens value became effectively 0
+
+// Long term goals:
+// Give tokens based on the amount deposited to tokenize this contract to tokenize this index and make it tradable
+// Contact friends about (definitely present) secuirty issues
 
 // May be useful when tring to generalise the constructor?
 // perhaps a type for each token would be useful in general?
@@ -46,77 +51,31 @@ interface IGenericErrors {
     error NotImplemented();
 }
 
-interface IQuotable {
-    function quote(
-        address base_token_address,
-        address exchange_token_address
-    ) external view returns (uint256);
-}
-
-contract MockQuote is IQuotable {
-    mapping(address => mapping(address => uint256)) public rates;
-
-    // TODO: should only be allowed by the owner, but as this is a mock IDC
-    function add_rate(
-        address base_token_address,
-        address exchange_token_address,
-        uint256 rate
-    ) public {
-        rates[base_token_address][exchange_token_address] = rate;
-    }
-
-    function quote(
-        address base_token_address,
-        address exchange_token_address
-    ) external view returns (uint256) {
-        return rates[base_token_address][exchange_token_address];
-    }
-}
-
-interface IExchangable {
-    function swap(
-        address token_sent,
-        uint256 amount,
-        address token_received
-    ) external returns (uint256);
-}
-
-contract MockSwap is IExchangable {
-    uint256 public rate;
-
-    function swap(
-        address token_sent,
-        uint256 amount,
-        address token_received
-    ) external returns (uint256) {
-        uint256 exchanged_amount = amount * rate;
-        require(
-            IERC20(token_sent).transferFrom(msg.sender, address(this), amount)
-        );
-        require(
-            IERC20(token_received).transferFrom(
-                address(this),
-                msg.sender,
-                exchanged_amount
-            )
-        );
-        return exchanged_amount;
-    }
-}
-
+// TODO: I do not like this. It is most definitely doing too much.
+// need to separate into parts that can be composed e.g. deposits, withdraals, valuation, rebalancing ect.
+// waiting to see what makes the most sense as more functionality is added
 /**
  * @title Fixed Allocation Portfolio
  * @author Dexter Edwards
  * @dev Represents a fixed allocation portfolio of ERC20 tokens in a specified proportion
  */
 contract FixedAllocation is IGenericErrors {
+    // TODO: this is immuatable and should be marked as so but cannot do this with reference types? How to handle when I want this to have arbitart size (eventually)
+    /**
+     * @dev The proportions that each index consitutent represents
+     */
+    mapping(address => uint) public proportions;
+
     // TODO: RESEARCH why can this not be a simple public property e.g. address public _base_token?
     // why is a manually written getter required for only address types?
     // The token that is to be used as the base of this fixed allocation portfolio
     /**
      * @dev The base token that users can deposit to the contract in, or withdraw from the contract
      */
-    address _base_token;
+    address immutable _base_token;
+
+    address immutable _exchange_address;
+    address immutable _quote_address;
 
     /**
      * @dev An array of addresses that have requested a withdrawal on the next rebalancing cycle
@@ -138,11 +97,6 @@ contract FixedAllocation is IGenericErrors {
      * @dev Balances of the portfolio in each asset
      */
     mapping(address => uint256) public balances;
-
-    /**
-     * @dev The proportions that each index consitutent represents
-     */
-    mapping(address => uint) public proportions;
 
     /**
      * @dev The pending deposits each address has made to this fund
@@ -190,13 +144,21 @@ contract FixedAllocation is IGenericErrors {
     //     uint256 base_token_amount
     // );
 
-    constructor(address baseToken, address token1, address token2) {
+    constructor(
+        address baseToken,
+        address token1,
+        address token2,
+        address exchange_address,
+        address quote_address
+    ) {
         // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
         // Step 1, abritary percentages
         // Step 2, arbitary amount of tokens
 
         // TODO: validate that the addresses provided are all ERC20s
         _base_token = baseToken;
+        _exchange_address = exchange_address;
+        _quote_address = quote_address;
         total_depoisted = 0;
         total_pending_deposits = 0;
         proportions[token1] = 50;

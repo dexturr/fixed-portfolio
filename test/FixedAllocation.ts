@@ -7,13 +7,8 @@ import hre from "hardhat";
 const TOTAL_SUPPLY = 100
 
 describe("FixedAllocation", function () {
-    // We define a fixture to reuse the same setup in every test.
-    // We use loadFixture to run this setup once, snapshot that state,
-    // and reset Hardhat Network to that snapshot in every test.
-    async function deployBasicFixedAllocation() {
-        // Contracts are deployed using the first signer/account by default
-        const [owner, otherAccount] = await hre.ethers.getSigners();
 
+    async function deployTokens() {
         const Token = await hre.ethers.getContractFactory("Token");
         const wEth = await Token.deploy('Weth', "WETH", TOTAL_SUPPLY);
         const tokenA = await Token.deploy('TokenA', "TKA", TOTAL_SUPPLY);
@@ -23,8 +18,28 @@ describe("FixedAllocation", function () {
             tokenB.getAddress(),
             wEth.getAddress()
         ])
+        return {
+            tokenA, tokenB, addressA, addressB, wethAddress, wEth
+        }
+    }
+
+    // We define a fixture to reuse the same setup in every test.
+    // We use loadFixture to run this setup once, snapshot that state,
+    // and reset Hardhat Network to that snapshot in every test.
+    async function deployBasicFixedAllocation() {
+        // Contracts are deployed using the first signer/account by default
+        const [owner, otherAccount] = await hre.ethers.getSigners();
+        const { tokenA, tokenB, addressA, addressB, wethAddress, wEth } = await deployTokens()
+        const Quote = await hre.ethers.getContractFactory("MockQuote");
+        const Exchange = await hre.ethers.getContractFactory("MockExchange");
+        const exchange = await Exchange.deploy()
+        const quote = await Quote.deploy()
+        const [quoteAddress, exchnageAddress] = await Promise.all([
+            quote.getAddress(),
+            exchange.getAddress(),
+        ])
         const FixedAllocation = await hre.ethers.getContractFactory("FixedAllocation");
-        const fixedAllocation = await FixedAllocation.deploy(wethAddress, addressA, addressB)
+        const fixedAllocation = await FixedAllocation.deploy(wethAddress, addressA, addressB, quoteAddress, exchnageAddress)
         const fixedAllocationAddress = await fixedAllocation.getAddress();
         return { tokenA, tokenB, owner, otherAccount, fixedAllocation, addressA, addressB, wethAddress, wEth, fixedAllocationAddress };
     }
