@@ -119,7 +119,13 @@ describe("FixedAllocation", function () {
             // });
         })
         describe('Balances', () => {
-            it('allows querying of different token balances', () => { })
+            // it('allows querying of different token balances', async () => {
+            //     const { fixedAllocation, fixedAllocationAddress, owner, wEth, addressA } = await loadFixture(deployBasicFixedAllocation);
+            //     await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+            //     const amount = TOTAL_SUPPLY / 2
+            //     await fixedAllocation.deposit(amount)
+            //     expect(await fixedAllocation.balances(addressA)).to.equal(amount.toString())
+            // })
             it('allows querying of total balance across all tokens', () => { })
         })
         it('throws not implemented error for rebalances', async () => {

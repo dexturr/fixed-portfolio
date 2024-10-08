@@ -18,9 +18,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // Figure out how to either take a fee to compsenate for trading or similar
 // Create the ability to limit deposits to a specific set of addresses
 // Consider adding deposit limits
-// Five tokens based on the amount deposited to tokenize this contract
+// Give tokens based on the amount deposited to tokenize this contract
 // Consider poor liquidity
 // Allow withdrawing a percentage of the value remaining
+// Look into decimals, overflow errors
 
 // May be useful when tring to generalise the constructor?
 // perhaps a type for each token would be useful in general?
@@ -43,6 +44,64 @@ interface IGenericErrors {
      * @dev Indicates that a contract method has yet to be implmeneted
      */
     error NotImplemented();
+}
+
+interface IQuotable {
+    function quote(
+        address base_token_address,
+        address exchange_token_address
+    ) external view returns (uint256);
+}
+
+contract MockQuote is IQuotable {
+    mapping(address => mapping(address => uint256)) public rates;
+
+    // TODO: should only be allowed by the owner, but as this is a mock IDC
+    function add_rate(
+        address base_token_address,
+        address exchange_token_address,
+        uint256 rate
+    ) public {
+        rates[base_token_address][exchange_token_address] = rate;
+    }
+
+    function quote(
+        address base_token_address,
+        address exchange_token_address
+    ) external view returns (uint256) {
+        return rates[base_token_address][exchange_token_address];
+    }
+}
+
+interface IExchangable {
+    function swap(
+        address token_sent,
+        uint256 amount,
+        address token_received
+    ) external returns (uint256);
+}
+
+contract MockSwap is IExchangable {
+    uint256 public rate;
+
+    function swap(
+        address token_sent,
+        uint256 amount,
+        address token_received
+    ) external returns (uint256) {
+        uint256 exchanged_amount = amount * rate;
+        require(
+            IERC20(token_sent).transferFrom(msg.sender, address(this), amount)
+        );
+        require(
+            IERC20(token_received).transferFrom(
+                address(this),
+                msg.sender,
+                exchanged_amount
+            )
+        );
+        return exchanged_amount;
+    }
 }
 
 /**
@@ -180,9 +239,9 @@ contract FixedAllocation is IGenericErrors {
      */
     function total_balance() external view returns (uint256) {
         // TODO: Need valuation contracts in ctor
-        return 100
+        return 100;
     }
- 
+
     /**
      * @dev Deposits into the contact
      * @param amount amount of the base_token to deposit
@@ -215,7 +274,8 @@ contract FixedAllocation is IGenericErrors {
         emit WithdrawalRequest(msg.sender);
     }
 
-    // TODO: May exceed maxiumum gas with this algo
+    // TODO: May exceed maxiumum gas with this algo, consider sending the withdrawals to
+    // a pending for withdrawal bucket and forcing the user to withdraw again.
     /**
      * @dev Processes withdrawals & deposits and rebalances the portfolio
      */
