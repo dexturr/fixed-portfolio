@@ -74,8 +74,8 @@ contract FixedAllocation is IGenericErrors {
      * @dev The base token that users can deposit to the contract in, or withdraw from the contract
      */
     address immutable _base_token;
-    address immutable _token1;
-    address immutable _token2;
+    IERC20 immutable _token1;
+    IERC20 immutable _token2;
 
     IExchangable immutable _exchange_address;
     IQuotable immutable _quote_address;
@@ -150,8 +150,8 @@ contract FixedAllocation is IGenericErrors {
 
     constructor(
         address baseToken,
-        address token1,
-        address token2,
+        IERC20 token1,
+        IERC20 token2,
         IExchangable exchange_address,
         IQuotable quote_address
     ) public {
@@ -169,13 +169,14 @@ contract FixedAllocation is IGenericErrors {
         total_depoisted = 0;
         total_pending_deposits = 0;
 
-        proportions[token1] = 50;
-        proportions[token2] = 50;
-        balances[token1] = 0;
-        balances[token2] = 0;
+        proportions[address(token1)] = 50;
+        proportions[address(token2)] = 50;
+        balances[address(token1)] = 0;
+        balances[address(token2)] = 0;
 
         // TODO: will need to be a for loop once this is more generalised
-        uint totalProportions = proportions[token1] + proportions[token2];
+        uint totalProportions = proportions[address(token1)] +
+            proportions[address(token2)];
         require(totalProportions == 100, "More than 100% represented");
     }
 
@@ -210,8 +211,8 @@ contract FixedAllocation is IGenericErrors {
      */
     function total_portfolio_base_balance() external view returns (uint256) {
         return
-            portfolio_base_token_value(_token1) +
-            portfolio_base_token_value(_token2);
+            portfolio_base_token_value(address(_token1)) +
+            portfolio_base_token_value(address(_token2));
     }
 
     function portfolio_base_token_value(
@@ -277,11 +278,11 @@ contract FixedAllocation is IGenericErrors {
     // Performs the initial investment of deposits, without the need of worrying about withdrawals and other exchanges.
     function initial_investment() public {
         uint256 total_token1_trade = (total_pending_deposits *
-            proportions[_token1]) / 100;
-        exchange_tokens(_base_token, total_token1_trade, _token1);
+            proportions[address(_token1)]) / 100;
+        exchange_tokens(_base_token, total_token1_trade, address(_token1));
         uint256 total_token2_trade = (total_pending_deposits *
-            proportions[_token2]) / 100;
-        exchange_tokens(_base_token, total_token2_trade, _token2);
+            proportions[address(_token2)]) / 100;
+        exchange_tokens(_base_token, total_token2_trade, address(_token2));
     }
 
     // TODO: May exceed maxiumum gas with this algo, consider sending the withdrawals to
