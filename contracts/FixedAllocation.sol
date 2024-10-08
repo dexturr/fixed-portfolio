@@ -77,7 +77,7 @@ contract FixedAllocation is IGenericErrors {
     /**
      * @dev The base token that users can deposit to the contract in, or withdraw from the contract
      */
-    address immutable _base_token;
+    IERC20 immutable _base_token;
     IERC20 immutable _token1;
     IERC20 immutable _token2;
 
@@ -147,7 +147,7 @@ contract FixedAllocation is IGenericErrors {
     );
 
     constructor(
-        address baseToken,
+        IERC20 baseToken,
         IERC20 token1,
         IERC20 token2,
         IExchangable exchange_address,
@@ -198,7 +198,7 @@ contract FixedAllocation is IGenericErrors {
      * @return base_token_address The address of the base token
      */
     function base_token() external view returns (address) {
-        return _base_token;
+        return address(_base_token);
     }
 
     /**
@@ -215,7 +215,7 @@ contract FixedAllocation is IGenericErrors {
         address token
     ) public view returns (uint256) {
         uint256 base_value_token = IQuotable(_quote_address).quote(
-            _base_token,
+            address(_base_token),
             token
         );
         return IERC20(token).balanceOf(address(this)) * base_value_token;
@@ -285,10 +285,18 @@ contract FixedAllocation is IGenericErrors {
     function initial_investment() public {
         uint256 total_token1_trade = (total_pending_deposits *
             proportions[address(_token1)]) / 100;
-        exchange_tokens(_base_token, total_token1_trade, address(_token1));
+        exchange_tokens(
+            address(_base_token),
+            total_token1_trade,
+            address(_token1)
+        );
         uint256 total_token2_trade = (total_pending_deposits *
             proportions[address(_token2)]) / 100;
-        exchange_tokens(_base_token, total_token2_trade, address(_token2));
+        exchange_tokens(
+            address(_base_token),
+            total_token2_trade,
+            address(_token2)
+        );
         // TODO: Mark pending deposits as completed
     }
 
