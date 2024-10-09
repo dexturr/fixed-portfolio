@@ -227,7 +227,7 @@ describe("FixedAllocation", function () {
                 expect(initialInvestmentPromise).to.emit(fixedAllocation, "Trade")
                     .withArgs(addressB, true, 10, 40);
             })
-            it('does not increment any balances if a signle trade cannot be performed', async () => {
+            it('does not alter any balances if a signle trade cannot be performed', async () => {
                 const { fixedAllocation, owner, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, addressA, addressB } = await loadFixture(deployBasicFixedAllocation);
                 await tokenA.approve(owner.address, TOTAL_SUPPLY)
                 await tokenB.approve(owner.address, TOTAL_SUPPLY)
@@ -240,6 +240,14 @@ describe("FixedAllocation", function () {
                 await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
 
                 await fixedAllocation.deposit(100)
+
+                expect(await tokenA.balanceOf(fixedAllocation)).to.equal(0)
+                expect(await tokenB.balanceOf(fixedAllocation)).to.equal(0)
+                expect(await wEth.balanceOf(fixedAllocation)).to.equal(100)
+                expect(await tokenA.balanceOf(exchnageAddress)).to.equal(100)
+                expect(await tokenB.balanceOf(exchnageAddress)).to.equal(100)
+                expect(await wEth.balanceOf(exchnageAddress)).to.equal(0)
+
                 expect(fixedAllocation.initial_investment()).to.revertedWithCustomError(wEth, "ERC20InsufficientBalance")
 
                 expect(await tokenA.balanceOf(fixedAllocation)).to.equal(0)
