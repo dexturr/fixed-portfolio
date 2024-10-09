@@ -290,6 +290,9 @@ describe("FixedAllocation", function () {
 
                 expect(fixedAllocation.connect(otherAccount).initial_investment()).to.revertedWithCustomError(fixedAllocation, "OwnableUnauthorizedAccount")
             })
+            it('marks deposits as no longer pending after the inital investment period', () => {
+
+            })
         })
         describe('TotalBalance', () => {
             it('gives value of 0 when no tokens are currently in the portfolio', async () => {

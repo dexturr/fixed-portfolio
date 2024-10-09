@@ -84,11 +84,20 @@ contract FixedAllocation is Ownable, IGenericErrors {
     IERC20 immutable _token1;
     IERC20 immutable _token2;
 
+    /**
+     * @dev the contract to be used to exchange base_token for token1 and token2
+     * @notice using an abstraction to an exchnage so different exchnages can be plugged in with an adapter
+     */
     IExchangable immutable _exchange_address;
+    /**
+     * @dev the contract to be used to value token1 and token2 in terms of base_token
+     * @notice using an abstraction to a quote so different exchnages can be plugged in with an adapter
+     */
     IQuotable immutable _quote_address;
 
     /**
      * @dev An array of addresses that have requested a withdrawal on the next rebalancing cycle
+     * @notice This is not a map, as we cannot rely on the amount deposited by a user to be the same at the time of withdrawal request an withdrawal processing
      */
     address[] _withdrawal_requests;
 
