@@ -25,7 +25,7 @@ import "contracts/Quote/Quote.sol";
 // Consider adding deposit limits too
 // Consider poor liquidity
 // Allow withdrawing a percentage of the value remaining
-// Look into decimals, overflow errors
+// Look into decimals, overflow errors, safemath
 // Add an emergency exit e.g. return all money to all parties, in case a portfolio could never trade e.g. a tokens value became effectively 0
 // Restrict rebalancing to a single address?
 
@@ -283,6 +283,8 @@ contract FixedAllocation is IGenericErrors {
      * @dev Performs the initial investment of deposits, without the need of worrying about withdrawals and other exchanges.
      */
     function initial_investment() public {
+        // Investing the whole lot at the moment. Could just balanceOf the contract too?
+        // not sure which would be better or why it might be better?
         uint256 total_token1_trade = (total_pending_deposits *
             proportions[address(_token1)]) / 100;
         exchange_tokens(
