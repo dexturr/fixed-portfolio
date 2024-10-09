@@ -6,8 +6,10 @@ import hre from "hardhat";
 
 const TOTAL_SUPPLY = 100
 
-describe("FixedAllocation", function () {
+// TODO: I don't like that the owner is also the owner of all tokens and the tests rely on this
+// would be better to have the owner as a hub account and setup an account in the correct state for each test I think
 
+describe("FixedAllocation", function () {
     async function deployTokens() {
         const Token = await hre.ethers.getContractFactory("Token");
         const wEth = await Token.deploy('Weth', "WETH", TOTAL_SUPPLY);
@@ -23,9 +25,7 @@ describe("FixedAllocation", function () {
         }
     }
 
-    // We define a fixture to reuse the same setup in every test.
-    // We use loadFixture to run this setup once, snapshot that state,
-    // and reset Hardhat Network to that snapshot in every test.
+    // TODO: too much setup for some of these tests. Not enough for others. Start splitting into util functions + other describe blocks
     async function deployBasicFixedAllocation() {
         // Contracts are deployed using the first signer/account by default
         const [owner, otherAccount] = await hre.ethers.getSigners();
@@ -88,8 +88,6 @@ describe("FixedAllocation", function () {
                 const { fixedAllocation, fixedAllocationAddress, owner, wEth } = await loadFixture(deployBasicFixedAllocation);
                 await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
                 const amount = TOTAL_SUPPLY / 2
-                // TODO: should look into change ethers balance at some point. 
-                // can this be used in place of a mocked out wEth token accurately?
                 await fixedAllocation.deposit(amount)
                 expect(await fixedAllocation.total_depoisted()).to.equal(amount)
                 expect(await fixedAllocation.total_pending_deposits()).to.equal(amount)
@@ -110,8 +108,6 @@ describe("FixedAllocation", function () {
                 const amount1 = TOTAL_SUPPLY / 4
                 const amount2 = TOTAL_SUPPLY / 2
                 const total = amount1 + amount2
-                // TODO: should look into change ethers balance at some point. 
-                // can this be used in place of a mocked out wEth token accurately?
                 await fixedAllocation.deposit(amount1)
                 await fixedAllocation.deposit(amount2)
                 expect(await fixedAllocation.total_depoisted()).to.equal(total)
@@ -172,8 +168,6 @@ describe("FixedAllocation", function () {
                 await tokenA.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
                 await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
 
-                // TODO: should look into change ethers balance at some point. 
-                // can this be used in place of a mocked out wEth token accurately?
                 await fixedAllocation.deposit(10)
                 await fixedAllocation.initial_investment()
 
@@ -196,17 +190,40 @@ describe("FixedAllocation", function () {
                 await tokenA.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
                 await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
 
-                // TODO: should look into change ethers balance at some point. 
-                // can this be used in place of a mocked out wEth token accurately?
                 await fixedAllocation.deposit(20)
                 await fixedAllocation.initial_investment()
 
-                expect(await tokenA.balanceOf(fixedAllocation)).to.equal(20) // 2 * (10 * 0.5)
-                expect(await tokenB.balanceOf(fixedAllocation)).to.equal(40) // 4 * (10 * 0.5)
+                expect(await tokenA.balanceOf(fixedAllocation)).to.equal(20) // 2 * (20 * 0.5)
+                expect(await tokenB.balanceOf(fixedAllocation)).to.equal(40) // 4 * (20 * 0.5)
                 expect(await wEth.balanceOf(fixedAllocation)).to.equal(0)
                 expect(await tokenA.balanceOf(exchnageAddress)).to.equal(80)
                 expect(await tokenB.balanceOf(exchnageAddress)).to.equal(60)
                 expect(await wEth.balanceOf(exchnageAddress)).to.equal(20)
+            })
+            it('buys tokens in the correct proportions when there have been multilpe deposits', async () => {
+                const { fixedAllocation, owner, otherAccount, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, } = await loadFixture(deployBasicFixedAllocation);
+                await tokenA.approve(owner.address, TOTAL_SUPPLY)
+                await tokenB.approve(owner.address, TOTAL_SUPPLY)
+
+                // Approve the fix allocation portfolio for our eth deposit
+                await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+                await wEth.connect(otherAccount).approve(fixedAllocationAddress, TOTAL_SUPPLY)
+                await wEth.transfer(otherAccount.address, 10)
+
+                // Seed all the tokens into our mock exchange
+                await tokenA.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+                await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+
+                await fixedAllocation.deposit(20)
+                await fixedAllocation.connect(otherAccount).deposit(10)
+                await fixedAllocation.initial_investment()
+
+                expect(await tokenA.balanceOf(fixedAllocation)).to.equal(30) // 2 * (30 * 0.5)
+                expect(await tokenB.balanceOf(fixedAllocation)).to.equal(60) // 4 * (30 * 0.5)
+                expect(await wEth.balanceOf(fixedAllocation)).to.equal(0)
+                expect(await tokenA.balanceOf(exchnageAddress)).to.equal(70)
+                expect(await tokenB.balanceOf(exchnageAddress)).to.equal(40)
+                expect(await wEth.balanceOf(exchnageAddress)).to.equal(30)
             })
             it('emits trade events with correct data', async () => {
                 const { fixedAllocation, owner, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, addressA, addressB } = await loadFixture(deployBasicFixedAllocation);

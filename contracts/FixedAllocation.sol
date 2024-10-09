@@ -26,11 +26,11 @@ import "contracts/Quote/Quote.sol";
 // Create the ability to limit deposits to a specific set of addresses
 // Consider adding deposit limits too
 // Consider poor liquidity
-// Allow withdrawing a percentage of the value remaining
+// Allow withdrawing a percentage/absolute of the value remaining
 // Look into decimals, overflow errors, safemath
 // Add an emergency exit e.g. return all money to all parties, in case a portfolio could never trade e.g. a tokens value became effectively 0
 // Restrict rebalancing to a single address?
-// How to trigger rebalancing on a clock?
+// How to trigger rebalancing on a set time period
 
 // Long term goals:
 // Give tokens based on the amount deposited to tokenize this contract to tokenize this index and make it tradable
@@ -65,7 +65,7 @@ interface IGenericErrors {
 /**
  * @title Fixed Allocation Portfolio
  * @author Dexter Edwards
- * @dev Represents a fixed allocation portfolio of ERC20 tokens in a specified proportion
+ * @dev Represents a fixed allocation portfolio of 2 ERC20 tokens maintained in a specified proportion
  */
 contract FixedAllocation is Ownable, IGenericErrors {
     // TODO: this is immuatable and should be marked as so but cannot do this with reference types? How to handle when I want this to have arbitart size (eventually)
@@ -186,7 +186,7 @@ contract FixedAllocation is Ownable, IGenericErrors {
      */
     function withdrawal_requests(address account) external view returns (bool) {
         bool has_requested = false;
-        for (uint256 index = 0; index < _withdrawal_requests.length; index++) {
+        for (uint index = 0; index < _withdrawal_requests.length; index++) {
             address request_address = _withdrawal_requests[index];
             if (account == request_address) {
                 has_requested = true;
