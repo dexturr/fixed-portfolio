@@ -28,6 +28,7 @@ import "contracts/Quote/Quote.sol";
 // Look into decimals, overflow errors, safemath
 // Add an emergency exit e.g. return all money to all parties, in case a portfolio could never trade e.g. a tokens value became effectively 0
 // Restrict rebalancing to a single address?
+// How to trigger rebalancing on a clock?
 
 // Long term goals:
 // Give tokens based on the amount deposited to tokenize this contract to tokenize this index and make it tradable
