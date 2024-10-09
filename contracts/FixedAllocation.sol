@@ -293,8 +293,13 @@ contract FixedAllocation is Ownable, IGenericErrors {
 
     /**
      * @dev Performs the initial investment of deposits, without the need of worrying about withdrawals and other exchanges.
+     * @notice Only owner can call this to prevent this portfolio being forced to trade by other addresses
      */
     function initial_investment() public onlyOwner {
+        require(
+            total_in_portfolio == 0,
+            "Can only initially invest when total_in_portfolio is 0"
+        );
         // Investing the whole lot at the moment. Could just balanceOf the contract too?
         // not sure which would be better or why it might be better?
         uint256 total_token1_trade = (total_pending_deposits *
@@ -311,6 +316,7 @@ contract FixedAllocation is Ownable, IGenericErrors {
             total_token2_trade,
             address(_token2)
         );
+        total_in_portfolio += total_pending_deposits;
         // TODO: Mark pending deposits as completed
     }
 

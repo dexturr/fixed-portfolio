@@ -290,8 +290,43 @@ describe("FixedAllocation", function () {
 
                 expect(fixedAllocation.connect(otherAccount).initial_investment()).to.revertedWithCustomError(fixedAllocation, "OwnableUnauthorizedAccount")
             })
-            it('marks deposits as no longer pending after the inital investment period', () => {
+            it('sets the total in the portfolio after investing', async () => {
+                const { fixedAllocation, owner, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, addressA, addressB } = await loadFixture(deployBasicFixedAllocation);
+                await tokenA.approve(owner.address, TOTAL_SUPPLY)
+                await tokenB.approve(owner.address, TOTAL_SUPPLY)
 
+                // Approve the fix allocation portfolio for our eth deposit
+                await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+
+                // Seed all the tokens into our mock exchange
+                await tokenA.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+                await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+
+                await fixedAllocation.deposit(10)
+
+                await fixedAllocation.initial_investment()
+                expect(await fixedAllocation.total_in_portfolio()).to.equal(10)
+            })
+            it('rejects if portfolio has non-zero balance', async () => {
+                const { fixedAllocation, owner, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, addressA, addressB } = await loadFixture(deployBasicFixedAllocation);
+                await tokenA.approve(owner.address, TOTAL_SUPPLY)
+                await tokenB.approve(owner.address, TOTAL_SUPPLY)
+
+                // Approve the fix allocation portfolio for our eth deposit
+                await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+
+                // Seed all the tokens into our mock exchange
+                await tokenA.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+                await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+
+                await fixedAllocation.deposit(11)
+
+                await fixedAllocation.initial_investment()
+                expect(fixedAllocation.initial_investment()).to.revertedWith("Can only initially invest when total_in_portfolio is 0")
+
+            })
+            it('marks deposits as no longer pending after the inital investment period', () => {
+                expect(false).to.equal(true)
             })
         })
         describe('TotalBalance', () => {
