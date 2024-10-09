@@ -2,12 +2,14 @@
 pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 import "contracts/Exchange/Exchange.sol";
 import "contracts/Quote/Quote.sol";
 
 // GENERAL TOOD: ideas that may go somewhere, everywhere or nowhere
 // Generalise to N tokens (exchnage paths may be difficult here)
-// How to handle slippage
+// How to handle slippage:
 //      Percentage tolerance?
 //      Absolute tolerance?
 //      Percentage of portfolio tolerance?
@@ -65,7 +67,7 @@ interface IGenericErrors {
  * @author Dexter Edwards
  * @dev Represents a fixed allocation portfolio of ERC20 tokens in a specified proportion
  */
-contract FixedAllocation is IGenericErrors {
+contract FixedAllocation is Ownable, IGenericErrors {
     // TODO: this is immuatable and should be marked as so but cannot do this with reference types? How to handle when I want this to have arbitart size (eventually)
     /**
      * @dev The proportions that each index consitutent represents
@@ -153,7 +155,7 @@ contract FixedAllocation is IGenericErrors {
         IERC20 token2,
         IExchangable exchange_address,
         IQuotable quote_address
-    ) public {
+    ) Ownable(msg.sender) {
         // TODO: starting with 2 tokens in an equal split, needs to be generalised later.
         // Step 1, abritary percentages
         // Step 2, arbitary amount of tokens
@@ -283,7 +285,7 @@ contract FixedAllocation is IGenericErrors {
     /**
      * @dev Performs the initial investment of deposits, without the need of worrying about withdrawals and other exchanges.
      */
-    function initial_investment() public {
+    function initial_investment() public onlyOwner {
         // Investing the whole lot at the moment. Could just balanceOf the contract too?
         // not sure which would be better or why it might be better?
         uint256 total_token1_trade = (total_pending_deposits *

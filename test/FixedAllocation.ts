@@ -257,6 +257,22 @@ describe("FixedAllocation", function () {
                 expect(await tokenB.balanceOf(exchnageAddress)).to.equal(100)
                 expect(await wEth.balanceOf(exchnageAddress)).to.equal(0)
             })
+            it('can only be called by the owner', async () => {
+                const { fixedAllocation, owner, otherAccount, wEth, tokenA, tokenB, fixedAllocationAddress, exchnageAddress, addressA, addressB } = await loadFixture(deployBasicFixedAllocation);
+                await tokenA.approve(owner.address, TOTAL_SUPPLY)
+                await tokenB.approve(owner.address, TOTAL_SUPPLY)
+
+                // Approve the fix allocation portfolio for our eth deposit
+                await wEth.approve(fixedAllocationAddress, TOTAL_SUPPLY)
+
+                // Seed all the tokens into our mock exchange
+                await tokenA.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+                await tokenB.transferFrom(owner.address, exchnageAddress, TOTAL_SUPPLY)
+
+                await fixedAllocation.deposit(10)
+
+                expect(fixedAllocation.connect(otherAccount).initial_investment()).to.revertedWithCustomError(fixedAllocation, "OwnableUnauthorizedAccount")
+            })
         })
         describe('TotalBalance', () => {
             it('gives value of 0 when no tokens are currently in the portfolio', async () => {
